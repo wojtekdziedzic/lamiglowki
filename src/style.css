@@ -93,11 +93,15 @@ header {
 }
 h1 {
   margin: 0;
-  font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+  font-size: clamp(1.2rem, 5vw, 1.9rem);
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+header:has([data-info]) { gap: 8px; }
 .titles { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .moves { color: var(--muted); font-size: 0.95rem; font-weight: 500; line-height: 1.2; }
 .icon-btn {
@@ -312,6 +316,18 @@ h1 {
 }
 .card h2 { margin: 0 0 4px; font-size: 1.9rem; font-weight: 800; }
 .card p { margin: 0 0 20px; color: var(--muted); }
+.rules-card { max-width: 420px; text-align: left; max-height: calc(100% - 20px); overflow-y: auto; }
+.rules-card h2 { text-align: center; }
+.rules {
+  margin: 12px 0 22px;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+.rules-card .primary { display: block; margin: 0 auto; }
 .primary {
   border: none;
   border-radius: 16px;

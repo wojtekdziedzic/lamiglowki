@@ -6,10 +6,20 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { errors, generate, isComplete, type Grid } from './logic';
 
 const ID = 'binairo';
+const INFO = {
+  id: ID,
+  title: 'Dwa kolory',
+  rules: [
+    'W każdym wierszu i kolumnie jest tyle samo czerwonych co niebieskich.',
+    'Nigdy trzy takie same kolory obok siebie, ani w poziomie, ani w pionie.',
+    'Żadne dwa wiersze ani żadne dwie kolumny nie mogą być identyczne.',
+    'Stuknięcie stawia czerwone, drugie niebieskie, trzecie czyści pole. Pola z białym tłem są stałe.',
+  ],
+};
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const grid = document.createElement('div');
   grid.className = 'bn-grid';
   grid.setAttribute('role', 'grid');
@@ -71,7 +81,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
         `Wiersz ${Math.floor(i / n) + 1}, kolumna ${(i % n) + 1}: ${g[i] === -1 ? 'puste' : NAMES[g[i]]}${puzzle[i] !== -1 ? ', stałe' : ''}`);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`${n}×${n} · puste: ${g.filter((v) => v === -1).length}`);
   }
 
@@ -102,7 +112,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const binairo: GameModule = {
   id: ID,
-  title: 'Dwa kolory',
+  title: INFO.title,
   tagline: 'Po równo, bez trzech w rzędzie',
   dailyLevel: 15,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

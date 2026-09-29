@@ -6,6 +6,16 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { conflicts, generate } from './logic';
 
 const ID = 'queens';
+const INFO = {
+  id: ID,
+  title: 'Królowe',
+  rules: [
+    'W każdym wierszu, każdej kolumnie i każdym kolorowym regionie stoi dokładnie jedna królowa.',
+    'Królowe nie mogą się stykać, także po skosie.',
+    'Stuknięcie stawia krzyżyk (tu nie ma królowej), drugie królowę, trzecie czyści pole.',
+    'Królowe łamiące zasady podświetlają się na czerwono.',
+  ],
+};
 
 // Pastel region colors, readable with dark marks in both themes
 const REGION_COLORS = [
@@ -19,7 +29,7 @@ type Mark = 0 | 1 | 2; // empty, X, queen
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const grid = document.createElement('div');
   grid.className = 'qn-grid';
   grid.setAttribute('role', 'grid');
@@ -90,7 +100,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
         `Wiersz ${Math.floor(i / n) + 1}, kolumna ${(i % n) + 1}, region ${regions[i] + 1}: ${['puste', 'krzyżyk', 'królowa'][marks[i]]}`);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`${n}×${n} · królowe: ${q.size}/${n}`);
   }
 
@@ -124,7 +134,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const queens: GameModule = {
   id: ID,
-  title: 'Królowe',
+  title: INFO.title,
   tagline: 'Jedna w rzędzie, kolumnie i kolorze',
   dailyLevel: 30,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

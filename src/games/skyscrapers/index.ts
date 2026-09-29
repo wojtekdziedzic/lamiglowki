@@ -5,10 +5,20 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { clueState, duplicates, generate, type Clues } from './logic';
 
 const ID = 'skyscrapers';
+const INFO = {
+  id: ID,
+  title: 'Wieżowce',
+  rules: [
+    'Każde pole to budynek o wysokości od 1 do N. W każdym wierszu i kolumnie każda wysokość występuje raz.',
+    'Liczba na brzegu mówi, ile budynków widać z tej strony: wyższy budynek zasłania niższe za nim.',
+    'Stuknij pole, potem wysokość na klawiaturze.',
+    'Spełniona podpowiedź blednie, złamana robi się czerwona.',
+  ],
+};
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const area = document.createElement('div');
   area.className = 'sk-area';
   const grid = document.createElement('div');
@@ -136,7 +146,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
       b.classList.toggle('used', left <= 0);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`${n}×${n} · puste: ${g.filter((v) => !v).length}`);
   }
 
@@ -191,7 +201,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const skyscrapers: GameModule = {
   id: ID,
-  title: 'Wieżowce',
+  title: INFO.title,
   tagline: 'Ile budynków widać z brzegu?',
   dailyLevel: 15,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

@@ -6,10 +6,19 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { generate, isSolved, press, type Board } from './logic';
 
 const ID = 'lightsout';
+const INFO = {
+  id: ID,
+  title: 'Zgaś światła',
+  rules: [
+    'Stuknięcie przełącza pole i jego sąsiadów: nad, pod, z lewej i z prawej.',
+    'Cel: zgasić wszystkie światła.',
+    'Dwa stuknięcia w to samo pole się znoszą, więc kolejność nie ma znaczenia.',
+  ],
+};
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const grid = document.createElement('div');
   grid.className = 'lo-grid';
   grid.setAttribute('role', 'grid');
@@ -57,7 +66,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
       el.classList.toggle('on', board[i]);
       el.setAttribute('aria-label', `Pole ${Math.floor(i / n) + 1}, ${(i % n) + 1}: ${board[i] ? 'zapalone' : 'zgaszone'}`);
     });
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     const lit = board.filter(Boolean).length;
     screen.setStatus(`Ruchy: ${moves} · zapalone: ${lit}`);
   }
@@ -87,7 +96,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const lightsout: GameModule = {
   id: ID,
-  title: 'Zgaś światła',
+  title: INFO.title,
   tagline: 'Każde kliknięcie przełącza sąsiadów',
   dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

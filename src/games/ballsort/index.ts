@@ -9,6 +9,17 @@ import { bounce, reducedMotion } from '../../fx';
 import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 
 const ID = 'ballsort';
+const INFO = {
+  id: ID,
+  title: 'Sortuj kulki',
+  rules: [
+    'Stuknij probówkę, żeby podnieść górne kulki, potem stuknij probówkę docelową.',
+    'Kulki kładziesz tylko na kulkę tego samego koloru albo do pustej probówki.',
+    'Cała grupa tego samego koloru z góry przeskakuje naraz, ile się zmieści.',
+    'Cel: każda probówka w jednym kolorze.',
+    'Na poziom masz 5 cofnięć i 1 dodatkową probówkę.',
+  ],
+};
 
 // Level cache survives leaving the game; the next level is prepared while the win card shows.
 const cache = new Map<number, State>();
@@ -25,7 +36,7 @@ function prefetch(l: number): void {
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const boardEl = document.createElement('div');
   boardEl.className = 'board';
   boardEl.setAttribute('role', 'group');
@@ -104,7 +115,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
       }
       boardEl.appendChild(el);
     });
-    screen.setTitle(flow.title(game.level));
+    screen.setLevel(flow.label(game.level));
     screen.setStatus(`Ruchy: ${game.moves}`);
     undoTool.setBadge(game.undosLeft);
     tubeTool.setBadge(game.extraTubesLeft);
@@ -287,7 +298,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const ballsort: GameModule = {
   id: ID,
-  title: 'Sortuj kulki',
+  title: INFO.title,
   tagline: 'Ułóż kolory w probówkach',
   dailyLevel: 30,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

@@ -6,6 +6,16 @@ import { ICONS, gameScreen, levelFlow, observeSize, showWin } from '../../ui';
 import { configForLevel, counts, flood, generate, neighbors, type MinesConfig } from './logic';
 
 const ID = 'minesweeper';
+const INFO = {
+  id: ID,
+  title: 'Saper',
+  rules: [
+    'Odkryj wszystkie pola bez min. Liczba mówi, ile min leży wokół pola, także po skosie.',
+    'Pierwsze stuknięcie jest zawsze bezpieczne, a każdą planszę da się przejść bez zgadywania.',
+    'Flagę stawiasz długim przytrzymaniem albo w trybie flagi (przycisk z flagą).',
+    'Stuknięcie w liczbę, przy której stoi już komplet flag, odkrywa resztę jej sąsiadów.',
+  ],
+};
 const LONG_PRESS_MS = 380;
 
 const FLAG = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 4h11l-2.5 4 2.5 4H6z" fill="#ef4444"/></svg>`;
@@ -13,7 +23,7 @@ const MINE = `<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="currentColo
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const grid = document.createElement('div');
   grid.className = 'ms-grid';
   grid.setAttribute('role', 'grid');
@@ -82,7 +92,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
     });
     flagTool.setPressed(flagMode);
     grid.classList.toggle('flag-mode', flagMode);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`${cfg.cols}×${cfg.rows} · miny: ${cfg.mines - flagged.filter(Boolean).length}`);
   }
 
@@ -186,7 +196,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const minesweeper: GameModule = {
   id: ID,
-  title: 'Saper',
+  title: INFO.title,
   tagline: 'Bez zgadywania, sama logika',
   dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true" font-family="inherit" font-weight="800" font-size="12" text-anchor="middle">

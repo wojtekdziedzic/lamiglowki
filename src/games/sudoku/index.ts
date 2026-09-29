@@ -12,10 +12,21 @@ function createMount(id: string, spec: Spec, label: string) {
   const geo = geometry(spec);
   const { n, cells: N, row, col, box, peers } = geo;
   const STATE_KEY = `${id}.state`;
+  const info = {
+    id,
+    title: label,
+    rules: [
+      `Wpisz cyfry od 1 do ${n}: w każdym wierszu, kolumnie i bloku ${spec.br}x${spec.bc} każda cyfra występuje dokładnie raz.`,
+      'Stuknij pole, potem cyfrę na klawiaturze. Małe liczby na klawiszach mówią, ile danej cyfry jeszcze brakuje.',
+      'Ołówek włącza notatki, czyli małe cyfry kandydatów. Wpisana cyfra sama znika z notatek sąsiadów.',
+      'Powtórzone cyfry podświetlają się na czerwono. Gumka czyści pole, cofanie działa bez limitu.',
+      'Gra zapisuje się w trakcie, możesz wyjść i wrócić.',
+    ],
+  };
 
   return function mount(root: HTMLElement, ctx: GameContext): () => void {
     const flow = levelFlow(id, ctx);
-    const screen = gameScreen(root, ctx.back);
+    const screen = gameScreen(root, ctx.back, info);
     const area = document.createElement('div');
     area.className = 'sd-area';
     area.style.setProperty('--n', String(n));
@@ -193,7 +204,7 @@ function createMount(id: string, spec: Spec, label: string) {
       pencilTool.setPressed(pencil);
       pad.classList.toggle('pencil', pencil);
       undoTool.setDisabled(!history.length);
-      screen.setTitle(flow.title(level, spec.n === 9 ? 'Sudoku' : 'Poziom'));
+      screen.setLevel(flow.label(level));
       screen.setStatus(`${difficultyLabel(clues, spec)} · puste: ${values.filter((v) => !v).length}`);
     }
 

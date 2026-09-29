@@ -7,10 +7,19 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { generate, isSolved, slide, type Tiles } from './logic';
 
 const ID = 'fifteen';
+const INFO = {
+  id: ID,
+  title: 'Piętnastka',
+  rules: [
+    'Stuknij kafelek w tym samym wierszu albo kolumnie co puste pole: przesunie się razem z kafelkami pomiędzy.',
+    'Ułóż kafelki po kolei od lewej do prawej i z góry na dół, puste pole na końcu.',
+    'Kafelek na swoim miejscu ma białą obwódkę, a kolor podpowiada jego wiersz.',
+  ],
+};
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const board = document.createElement('div');
   board.className = 'p15-board';
   board.setAttribute('aria-label', 'Plansza z kafelkami');
@@ -65,7 +74,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
       el.style.transform = `translate(${(i % n) * 100}%, ${Math.floor(i / n) * 100}%)`;
       el.classList.toggle('home', v === i + 1);
     });
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`Ruchy: ${moves}`);
   }
 
@@ -95,7 +104,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const fifteen: GameModule = {
   id: ID,
-  title: 'Piętnastka',
+  title: INFO.title,
   tagline: 'Przesuwaj kafelki po kolei',
   dailyLevel: 10,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true" font-family="inherit" font-weight="800" font-size="12" text-anchor="middle">

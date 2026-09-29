@@ -5,6 +5,16 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { N, errors, generate, isComplete, type Edge, type Grid } from './logic';
 
 const ID = 'tango';
+const INFO = {
+  id: ID,
+  title: 'Słońca i księżyce',
+  rules: [
+    'W każdym wierszu i kolumnie są trzy słońca i trzy księżyce.',
+    'Nigdy trzy takie same symbole obok siebie, ani w poziomie, ani w pionie.',
+    'Znak "=" między polami: oba symbole są takie same. Znak "×": są różne.',
+    'Stuknięcie stawia słońce, drugie księżyc, trzecie czyści pole. Pola z białym tłem są stałe.',
+  ],
+};
 const GAP = 4;
 
 const SUN = `<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M12 1.8v3M12 19.2v3M1.8 12h3M19.2 12h3M4.8 4.8l2.1 2.1M17.1 17.1l2.1 2.1M4.8 19.2l2.1-2.1M17.1 6.9l2.1-2.1"/></g><circle cx="12" cy="12" r="5.2" fill="#facc15" stroke="#f59e0b" stroke-width="1.2"/></svg>`;
@@ -12,7 +22,7 @@ const MOON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.2a9 9
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const board = document.createElement('div');
   board.className = 'tg-board';
   const grid = document.createElement('div');
@@ -94,7 +104,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
         `Wiersz ${Math.floor(i / N) + 1}, kolumna ${(i % N) + 1}: ${g[i] === -1 ? 'puste' : NAMES[g[i]]}${puzzle[i] !== -1 ? ', stałe' : ''}`);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`puste: ${g.filter((v) => v === -1).length}`);
   }
 
@@ -126,7 +136,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const tango: GameModule = {
   id: ID,
-  title: 'Słońca i księżyce',
+  title: INFO.title,
   tagline: 'Po trzy w rzędzie, znaki = i ×',
   dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">

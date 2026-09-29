@@ -1,7 +1,7 @@
 import { isMuted, setMuted, sfx } from './audio';
 import { confetti } from './fx';
 import { haptic } from './haptics';
-import { loadLevel, saveLevel } from './storage';
+import { loadJSON, loadLevel, saveJSON, saveLevel } from './storage';
 import type { GameContext } from './types';
 
 const svg = (body: string, width = 2.4) =>
@@ -16,7 +16,16 @@ export const ICONS = {
   flag: svg('<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'),
   erase: svg('<path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 19"/><path d="M22 21H7"/><path d="m5 11 9 9"/>'),
   sound: svg('<path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="cross" d="m16 9 6 6"/><path class="cross" d="m22 9-6 6"/>', 2.2),
+  info: svg('<circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><path d="M12 7.2v.1"/>', 2.4),
 };
+
+/** What the header and the rules card show for a game. */
+export interface GameInfo {
+  id: string;
+  title: string;
+  /** Short rule bullets, shown under the "i" button and on the first visit. */
+  rules: string[];
+}
 
 export interface ToolOpts {
   icon: string;
@@ -35,7 +44,9 @@ export interface Tool {
 export interface Screen {
   wrap: HTMLElement;       // flexible area between header and toolbar
   toolbar: HTMLElement;
-  setTitle(t: string): void;
+  /** First part of the subtitle: "Poziom 12" or "Zagadka dnia". */
+  setLevel(t: string): void;
+  /** Rest of the subtitle: moves, board size, counters. */
   setStatus(t: string): void;
   tool(opts: ToolOpts): Tool;
   /** Registers the open win card so leaving the game also closes it. */
@@ -59,13 +70,37 @@ export function muteButton(): HTMLButtonElement {
   return btn;
 }
 
-/** Standard game layout: header (back, title, status, mute), flexible board area, toolbar. */
-export function gameScreen(root: HTMLElement, onBack: () => void): Screen {
+/** Rules card; returns its close function. */
+function showRules(info: GameInfo, onClose: () => void): () => void {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay show';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML = `<div class="card rules-card"><h2></h2><ul class="rules"></ul><button class="primary">Rozumiem</button></div>`;
+  overlay.querySelector('h2')!.textContent = info.title;
+  const list = overlay.querySelector('.rules')!;
+  for (const rule of info.rules) {
+    const li = document.createElement('li');
+    li.textContent = rule;
+    list.appendChild(li);
+  }
+  document.body.appendChild(overlay);
+  const btn = overlay.querySelector<HTMLButtonElement>('.primary')!;
+  btn.focus();
+  const close = () => { overlay.remove(); onClose(); };
+  btn.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  return close;
+}
+
+/** Standard game layout: header (back, game name, level and status, info, mute), board area, toolbar. */
+export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo): Screen {
   root.innerHTML = `
     <div class="app">
       <header>
         <button class="icon-btn" data-back aria-label="Wróć do menu" title="Menu">${ICONS.back}</button>
         <div class="titles"><h1></h1><span class="moves"></span></div>
+        <button class="icon-btn" data-info aria-label="Jak grać" title="Jak grać">${ICONS.info}</button>
       </header>
       <div class="board-wrap"></div>
       <div class="toolbar"></div>
@@ -73,17 +108,33 @@ export function gameScreen(root: HTMLElement, onBack: () => void): Screen {
   const header = root.querySelector('header')!;
   header.appendChild(muteButton());
   root.querySelector('[data-back]')!.addEventListener('click', onBack);
-  const h1 = root.querySelector('h1')!;
+  root.querySelector('h1')!.textContent = info.title;
   const status = root.querySelector<HTMLElement>('.moves')!;
   const toolbar = root.querySelector<HTMLElement>('.toolbar')!;
   let closeWin: (() => void) | null = null;
+  let closeRules: (() => void) | null = null;
   let alive = true;
+  let levelText = '';
+  let statusText = '';
+  const syncSubtitle = () => { status.textContent = [levelText, statusText].filter(Boolean).join(' · '); };
+
+  const openRules = () => {
+    if (closeRules) return;
+    closeRules = showRules(info, () => { closeRules = null; });
+  };
+  root.querySelector('[data-info]')!.addEventListener('click', openRules);
+  // First visit to a game explains it once.
+  const seenKey = `${info.id}.rulesSeen`;
+  if (!loadJSON<boolean>(seenKey)) {
+    saveJSON(seenKey, true);
+    setTimeout(() => { if (alive) openRules(); }, 250);
+  }
 
   return {
     wrap: root.querySelector<HTMLElement>('.board-wrap')!,
     toolbar,
-    setTitle: (t) => { h1.textContent = t; },
-    setStatus: (t) => { status.textContent = t; },
+    setLevel: (t) => { levelText = t; syncSubtitle(); },
+    setStatus: (t) => { statusText = t; syncSubtitle(); },
     tool({ icon, label, onClick, badge }) {
       const el = document.createElement('button');
       el.className = 'tool';
@@ -110,6 +161,7 @@ export function gameScreen(root: HTMLElement, onBack: () => void): Screen {
     destroy() {
       alive = false;
       closeWin?.();
+      closeRules?.();
       root.textContent = '';
     },
   };
@@ -166,7 +218,8 @@ export interface LevelFlow {
   initial: number;
   /** Seed salt for the generators (0 for regular levels). */
   salt: number;
-  title(level: number, prefix?: string): string;
+  /** Subtitle lead: "Poziom 12", or "Zagadka dnia" for the daily board. */
+  label(level: number): string;
   /** Call when a level starts. */
   enter(level: number): void;
   /** Call the moment the board is solved; shows the card after a short delay. */
@@ -179,7 +232,7 @@ export function levelFlow(id: string, ctx: GameContext): LevelFlow {
     daily: !!daily,
     initial: daily ? daily.level : loadLevel(id),
     salt: daily ? daily.salt : 0,
-    title: (level, prefix = 'Poziom') => (daily ? 'Zagadka dnia' : `${prefix} ${level}`),
+    label: (level) => (daily ? 'Zagadka dnia' : `Poziom ${level}`),
     enter(level) { if (!daily) saveLevel(id, level); },
     won(screen, level, text, next, delayMs = 300) {
       // Persist right away so leaving before tapping "next" keeps the progress.

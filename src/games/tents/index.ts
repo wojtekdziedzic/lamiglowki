@@ -5,6 +5,16 @@ import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { generate, touching } from './logic';
 
 const ID = 'tents';
+const INFO = {
+  id: ID,
+  title: 'Namioty',
+  rules: [
+    'Przy każdym drzewie stoi dokładnie jeden namiot, tuż obok (nie po skosie).',
+    'Namioty nie stykają się ze sobą, nawet rogami.',
+    'Liczby przy wierszach i kolumnach mówią, ile stoi w nich namiotów.',
+    'Stuknięcie stawia trawę (tu na pewno nie ma namiotu), drugie namiot, trzecie czyści pole.',
+  ],
+};
 
 const TREE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 11h3.5L4 17h16l-4.5-6H19z" fill="#16a34a" stroke="#15803d" stroke-width="1" stroke-linejoin="round"/><rect x="10.5" y="17" width="3" height="5" rx="1" fill="#92400e"/></svg>`;
 const TENT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19z" fill="#f97316" stroke="#c2410c" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 9.5 8.5 20h7z" fill="#7c2d12"/></svg>`;
@@ -13,7 +23,7 @@ type Mark = 0 | 1 | 2; // empty, grass (no tent here), tent
 
 function mount(root: HTMLElement, ctx: GameContext): () => void {
   const flow = levelFlow(ID, ctx);
-  const screen = gameScreen(root, ctx.back);
+  const screen = gameScreen(root, ctx.back, INFO);
   const grid = document.createElement('div');
   grid.className = 'te-grid';
   grid.setAttribute('role', 'grid');
@@ -122,7 +132,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
       clueState(colClueEls[k], Array.from({ length: n }, (_, r) => tents[r * n + k]).filter(Boolean).length, colCounts[k]);
     }
     undoTool.setDisabled(!history.length);
-    screen.setTitle(flow.title(level));
+    screen.setLevel(flow.label(level));
     screen.setStatus(`${n}×${n} · namioty: ${tents.filter(Boolean).length}/${trees.filter(Boolean).length}`);
   }
 
@@ -156,7 +166,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
 export const tents: GameModule = {
   id: ID,
-  title: 'Namioty',
+  title: INFO.title,
   tagline: 'Namiot przy każdym drzewie',
   dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">
