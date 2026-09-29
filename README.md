@@ -32,4 +32,6 @@ pnpm exec cap sync android
 Android builds need JDK 21. Release signing reads `android/keystore.properties`
 (not in the repo): `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
 
-A project of [dziedzic.cloud](https://dziedzic.cloud).
+## License
+
+[MIT](LICENSE). A project of [dziedzic.cloud](https://dziedzic.cloud).
