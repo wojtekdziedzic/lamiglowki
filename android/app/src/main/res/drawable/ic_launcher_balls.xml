@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon foreground: two tubes with candy balls. 108dp canvas, art kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- tube glass -->
+    <path android:fillColor="#33FFFFFF" android:strokeColor="#CFE6F7" android:strokeWidth="2.5"
+        android:pathData="M33,31 L33,71 A10,10 0 0,0 53,71 L53,31" />
+    <path android:fillColor="#33FFFFFF" android:strokeColor="#CFE6F7" android:strokeWidth="2.5"
+        android:pathData="M55,31 L55,71 A10,10 0 0,0 75,71 L75,31" />
+    <!-- rims -->
+    <path android:fillColor="#CFE6F7" android:pathData="M30,29 h26 v3.5 h-26 z" />
+    <path android:fillColor="#CFE6F7" android:pathData="M52,29 h26 v3.5 h-26 z" />
+    <!-- left tube: red, blue, yellow -->
+    <path android:fillColor="#EF4444" android:pathData="M36,72 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 z" />
+    <path android:fillColor="#3B82F6" android:pathData="M36,57 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 z" />
+    <path android:fillColor="#FACC15" android:pathData="M36,42 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 z" />
+    <!-- right tube: green, green -->
+    <path android:fillColor="#22C55E" android:pathData="M58,72 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 z" />
+    <path android:fillColor="#22C55E" android:pathData="M58,57 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 z" />
+    <!-- highlights -->
+    <path android:fillColor="#E6FFFFFF" android:pathData="M39,69 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+    <path android:fillColor="#E6FFFFFF" android:pathData="M39,54 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+    <path android:fillColor="#E6FFFFFF" android:pathData="M39,39 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+    <path android:fillColor="#E6FFFFFF" android:pathData="M61,69 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+    <path android:fillColor="#E6FFFFFF" android:pathData="M61,54 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+</vector>
