@@ -638,6 +638,46 @@ h1 {
 .sk-cell.bad { color: var(--danger); }
 .sk-cell:focus-visible { outline: 3px solid var(--text); outline-offset: -2px; }
 
+/* ---------- tents ---------- */
+.te-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--m), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--m), minmax(0, 1fr));
+  gap: 2px;
+}
+.te-clue {
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--cell) * 0.42);
+  font-weight: 800;
+  color: var(--muted);
+}
+.te-clue.ok { opacity: 0.35; }
+.te-clue.bad { color: var(--danger); }
+.te-cell {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: color-mix(in srgb, #86efac 45%, var(--btn));
+  box-shadow: inset 0 0 0 1px rgba(21, 128, 61, 0.25);
+  cursor: pointer;
+  overflow: hidden;
+}
+.te-cell svg { width: 74%; height: 74%; }
+.te-cell.tree { cursor: default; }
+.te-cell.grass { background: color-mix(in srgb, #22c55e 55%, var(--btn)); }
+.te-cell.grass::after {
+  content: "";
+  width: 18%;
+  height: 18%;
+  border-radius: 50%;
+  background: rgba(21, 128, 61, 0.6);
+}
+.te-cell.bad { box-shadow: inset 0 0 0 3px var(--danger); }
+.te-cell:focus-visible { outline: 3px solid var(--text); outline-offset: -2px; }
+
 /* ---------- queens ---------- */
 .qn-grid {
   display: grid;

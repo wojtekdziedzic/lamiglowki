@@ -7,6 +7,7 @@ import * as qn from '../src/games/queens/logic';
 import * as ms from '../src/games/minesweeper/logic';
 import * as tg from '../src/games/tango/logic';
 import * as sk from '../src/games/skyscrapers/logic';
+import * as te from '../src/games/tents/logic';
 
 describe('lights out', () => {
   it('is deterministic, never pre-solved, and solved by its own presses', () => {
@@ -181,6 +182,38 @@ describe('skyscrapers', () => {
   });
 });
 
+describe('tents', () => {
+  it('generates boards whose trees, counts and rules pin one solution', () => {
+    for (const l of [1, 7, 21, 41, 60]) {
+      const { n, trees, tents, rowCounts, colCounts } = te.generate(l);
+      expect(te.touching(n, tents).size).toBe(0);
+      expect(te.perfectMatching(n, trees, tents)).toBe(true);
+      expect(trees.every((t, i) => !(t && tents[i]))).toBe(true);
+      const sols = te.solveAll(n, trees, rowCounts, colCounts, 2);
+      expect(sols.length, `level ${l}`).toBe(1);
+      expect(sols[0]).toEqual(tents);
+    }
+  });
+
+  it('needs a one-to-one tree/tent pairing', () => {
+    // Two trees sharing their only possible tent cannot both be served.
+    const trees = new Array(9).fill(false);
+    trees[0] = trees[2] = true;
+    const tents = new Array(9).fill(false);
+    tents[1] = true;
+    expect(te.perfectMatching(3, trees, tents)).toBe(false);
+  });
+
+  it('is deterministic and fast enough for a phone', () => {
+    expect(te.generate(12)).toEqual(te.generate(12));
+    const t0 = performance.now();
+    for (let l = 45; l < 50; l++) te.generate(l);
+    const avg = (performance.now() - t0) / 5;
+    console.log(`tents 9x9 avg ${avg.toFixed(0)} ms`);
+    expect(avg).toBeLessThan(400);
+  });
+});
+
 describe('daily seeds', () => {
   // Same day -> same board for everyone; salt 0 must keep the regular level sequence.
   const day = 20725;
@@ -193,6 +226,7 @@ describe('daily seeds', () => {
     ['tango', (s) => tg.generate(20, s).puzzle],
     ['skyscrapers', (s) => sk.generate(15, s).clues],
     ['sudoku6', (s) => sd.generate(15, sd.SPEC6, s).puzzle],
+    ['tents', (s) => te.generate(20, s).trees],
   ];
   for (const [name, gen] of cases) {
     it(`${name}: deterministic per day and different from the regular level`, () => {

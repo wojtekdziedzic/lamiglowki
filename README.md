@@ -1,7 +1,7 @@
 # Łamigłówki
 
-Ten logic puzzles in one Android app: ball sort, Sudoku (9x9 and 6x6), Queens, Suns and Moons
-(Tango-style), Skyscrapers, no-guess Minesweeper, Binairo ("Dwa kolory"), Lights Out and the
+Eleven logic puzzles in one Android app: ball sort, Sudoku (9x9 and 6x6), Queens, Suns and Moons
+(Tango-style), Skyscrapers, Tents, no-guess Minesweeper, Binairo ("Dwa kolory"), Lights Out and the
 15-puzzle, plus a daily puzzle that is the same for everyone. No ads, no accounts, works offline.
 
 Download: https://dziedzic.cloud/lamiglowki
@@ -15,6 +15,8 @@ and checks them with a solver before you see them:
   picking harder layouts (solver effort percentile) instead of adding colors.
 - **Sudoku, Binairo, Queens, Suns and Moons, Skyscrapers**: clues are removed only while the
   solution stays unique.
+- **Tents**: random non-touching tents each get a tree; a solver with a bipartite matching check
+  keeps only layouts with exactly one answer.
 - **Daily puzzle**: each generator takes a salt; the day number seeds one board per game per day.
 - **Minesweeper**: mines are placed after the first tap and the board is re-rolled until a pure
   deduction solver can clear it, so no guessing is ever needed.

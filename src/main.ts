@@ -12,9 +12,10 @@ import { queens } from './games/queens';
 import { minesweeper } from './games/minesweeper';
 import { tango } from './games/tango';
 import { skyscrapers } from './games/skyscrapers';
+import { tents } from './games/tents';
 
 const GAMES: GameModule[] = [
-  ballsort, sudoku, sudoku6, queens, tango, skyscrapers, minesweeper, binairo, lightsout, fifteen,
+  ballsort, sudoku, sudoku6, queens, tango, skyscrapers, tents, minesweeper, binairo, lightsout, fifteen,
 ];
 
 const root = document.getElementById('root')!;
