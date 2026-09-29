@@ -236,7 +236,7 @@ h1 {
   border-bottom-color: transparent;
   transform: rotate(var(--rot, 20deg));
 }
-.tube.sel .ball:last-child {
+.tube.sel .ball.lift {
   transform: translateY(calc(-1 * var(--step) * (var(--empty) + 0.9)));
 }
 .ball.hidden { visibility: hidden; }

@@ -13,6 +13,11 @@ const enc = (c: number) => String.fromCharCode(97 + c);
 
 const isDone = (t: string) => t.length === CAP && t.split('').every((c) => c === t[0]);
 const isUniform = (t: string) => t.split('').every((c) => c === t[0]);
+const runLength = (t: string) => {
+  let k = 0;
+  while (k < t.length && t[t.length - 1 - k] === t[t.length - 1]) k++;
+  return k;
+};
 const solved = (s: string[]) => s.every((t) => t.length === 0 || isDone(t));
 const keyOf = (s: string[]) => s.slice().sort().join('|');
 
@@ -40,7 +45,7 @@ export function solve(start: State, nodeLimit: number): SolveResult {
       if (!src.length || isDone(src)) continue;
       const ball = src[src.length - 1];
       const srcUniform = isUniform(src);
-      const rest = src.slice(0, -1);
+      const rest = src.slice(0, -runLength(src)); // what the tube shows after the run leaves
       let triedEmpty = false;
       for (let j = 0; j < s.length; j++) {
         if (i === j) continue;
@@ -63,10 +68,12 @@ export function solve(start: State, nodeLimit: number): SolveResult {
     // Stack is LIFO: push worst first so the best move is explored first.
     moves.sort((a, b) => a.score - b.score);
     for (const m of moves) {
+      // Same rule as the game: the whole top run moves, as far as the destination has room.
       const n = s.slice();
-      const ball = n[m.from][n[m.from].length - 1];
-      n[m.from] = n[m.from].slice(0, -1);
-      n[m.to] = n[m.to] + ball;
+      const src = n[m.from];
+      const k = Math.min(runLength(src), CAP - n[m.to].length);
+      n[m.from] = src.slice(0, -k);
+      n[m.to] = n[m.to] + src.slice(-k);
       stack.push(n);
     }
   }

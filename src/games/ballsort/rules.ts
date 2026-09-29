@@ -14,6 +14,19 @@ export function canMove(state: State, from: number, to: number): boolean {
   return !b.length || top(a) === top(b);
 }
 
+/** Length of the same-color run on top of the tube. */
+export function topRun(t: Tube): number {
+  let k = 0;
+  while (k < t.length && t[t.length - 1 - k] === t[t.length - 1]) k++;
+  return k;
+}
+
+/** How many balls one move carries: the whole top run, limited by free space. 0 if illegal. */
+export function moveCount(state: State, from: number, to: number): number {
+  if (!canMove(state, from, to)) return 0;
+  return Math.min(topRun(state[from]), CAP - state[to].length);
+}
+
 export function isTubeDone(t: Tube): boolean {
   return t.length === CAP && t.every((c) => c === t[0]);
 }

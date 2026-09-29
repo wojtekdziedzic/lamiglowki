@@ -1,7 +1,7 @@
 import { EXTRA_TUBE_LIMIT, UNDO_LIMIT } from './config';
-import { canMove, cloneState, type State } from './rules';
+import { canMove, cloneState, moveCount, type State } from './rules';
 
-export interface Move { from: number; to: number }
+export interface Move { from: number; to: number; count: number }
 
 /** Pure game state; no DOM. */
 export class Game {
@@ -32,12 +32,20 @@ export class Game {
     return canMove(this.tubes, from, to);
   }
 
-  move(from: number, to: number): boolean {
-    if (!this.canMove(from, to)) return false;
-    this.tubes[to].push(this.tubes[from].pop()!);
-    this.history.push({ from, to });
-    this.moves++;
-    return true;
+  /** Balls the next move from -> to would carry (0 if illegal). */
+  moveCount(from: number, to: number): number {
+    return moveCount(this.tubes, from, to);
+  }
+
+  /** Moves the whole same-color run that fits; counts as one move. Returns balls moved. */
+  move(from: number, to: number): number {
+    const count = this.moveCount(from, to);
+    for (let k = 0; k < count; k++) this.tubes[to].push(this.tubes[from].pop()!);
+    if (count) {
+      this.history.push({ from, to, count });
+      this.moves++;
+    }
+    return count;
   }
 
   get canUndo(): boolean {
@@ -46,8 +54,8 @@ export class Game {
 
   undo(): boolean {
     if (!this.canUndo) return false;
-    const { from, to } = this.history.pop()!;
-    this.tubes[from].push(this.tubes[to].pop()!);
+    const { from, to, count } = this.history.pop()!;
+    for (let k = 0; k < count; k++) this.tubes[from].push(this.tubes[to].pop()!);
     this.undosLeft--;
     this.moves = Math.max(0, this.moves - 1);
     return true;

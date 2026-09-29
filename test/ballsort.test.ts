@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CAP, COLORS, EMPTY_TUBES } from '../src/games/ballsort/config';
-import { canMove, isSolved, isTubeDone } from '../src/games/ballsort/rules';
+import { canMove, isSolved, isTubeDone, moveCount, topRun } from '../src/games/ballsort/rules';
+import { Game } from '../src/games/ballsort/game';
 import { solve } from '../src/games/ballsort/solver';
 import { colorsForLevel, generate } from '../src/games/ballsort/generator';
 
@@ -20,6 +21,25 @@ describe('rules', () => {
     expect(isTubeDone([2, 2, 2])).toBe(false);
     expect(isSolved([[1, 1, 1, 1], [], [0, 0, 0, 0]])).toBe(true);
     expect(isSolved([[1, 1, 1, 0], [0, 0, 0, 1]])).toBe(false);
+  });
+});
+
+describe('group moves', () => {
+  it('moves the whole same-color run, limited by free space', () => {
+    expect(topRun([0, 1, 1])).toBe(2);
+    expect(moveCount([[0, 1, 1], []], 0, 1)).toBe(2);
+    expect(moveCount([[0, 1, 1], [2, 2, 1]], 0, 1)).toBe(1); // only one slot free
+    expect(moveCount([[0, 1, 1], [2]], 0, 1)).toBe(0);
+  });
+
+  it('undoes a group move as one step', () => {
+    const g = new Game();
+    g.start(1, [[0, 1, 1], [0, 0, 0], [1, 1], []]);
+    expect(g.move(0, 3)).toBe(2);
+    expect(g.moves).toBe(1);
+    expect(g.undo()).toBe(true);
+    expect(g.tubes[0]).toEqual([0, 1, 1]);
+    expect(g.tubes[3]).toEqual([]);
   });
 });
 

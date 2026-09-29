@@ -1,6 +1,6 @@
 import type { GameModule } from '../../types';
 import { CAP, COLORS } from './config';
-import { isSolved, isTubeDone, type State } from './rules';
+import { isSolved, isTubeDone, topRun, type State } from './rules';
 import { generate } from './generator';
 import { Game } from './game';
 import { loadLevel, saveLevel } from '../../storage';
@@ -66,7 +66,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   });
 
   interface RenderOpts {
-    hidden?: { tube: number; index: number };
+    /** Balls at index >= from in this tube are still in flight. */
+    hidden?: { tube: number; from: number };
     closing?: number;
   }
 
@@ -76,6 +77,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
       const el = document.createElement('div');
       el.className = 'tube';
       const done = isTubeDone(t);
+      // The selected tube lifts its whole top run: that is what the next move carries.
+      const lift = i === selected ? t.length - topRun(t) : Infinity;
       if (i === selected) el.classList.add('sel');
       if (done) el.classList.add('done');
       if (opts.closing === i) el.classList.add('closing');
@@ -90,7 +93,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
         b.className = 'ball';
         b.style.setProperty('--c', COLORS[c]);
         b.style.setProperty('--rot', `${(c * 47) % 360}deg`);
-        if (opts.hidden && opts.hidden.tube === i && opts.hidden.index === k) b.classList.add('hidden');
+        if (opts.hidden && opts.hidden.tube === i && k >= opts.hidden.from) b.classList.add('hidden');
+        if (k >= lift) b.classList.add('lift');
         el.appendChild(b);
       });
       if (done) {
@@ -169,62 +173,81 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     }
   }
 
+  const FLIGHT_MS = 360;
+  const STAGGER_MS = 80;
+
   function doMove(from: number, to: number): void {
-    const fromRect = (tubeEl(from).lastElementChild as HTMLElement).getBoundingClientRect();
+    const count = game.moveCount(from, to);
+    // Top ball first: it leads the group and lands lowest in the destination.
+    const srcBalls = [...tubeEl(from).querySelectorAll<HTMLElement>('.ball')].slice(-count).reverse();
+    const fromRects = srcBalls.map((b) => b.getBoundingClientRect());
     const color = game.tubes[from][game.tubes[from].length - 1];
 
     game.move(from, to);
     selected = -1;
-    const height = game.tubes[to].length - 1;
+    const base = game.tubes[to].length - count;
     const closing = isTubeDone(game.tubes[to]) ? to : undefined;
-    // Render without the closing flag first so the cork animates only after the ball lands.
-    render({ hidden: { tube: to, index: height } });
+    // Render without the closing flag first so the cork animates only after the balls land.
+    render({ hidden: { tube: to, from: base } });
 
-    const destBall = tubeEl(to).children[height] as HTMLElement;
-    const toRect = destBall.getBoundingClientRect();
+    const destBalls = [...tubeEl(to).querySelectorAll<HTMLElement>('.ball')].slice(base);
     const destTubeRect = tubeEl(to).getBoundingClientRect();
 
-    if (reducedMotion() || !destBall.animate) { land(destBall, height, closing); return; }
+    if (reducedMotion() || !destBalls[0]?.animate) {
+      destBalls.forEach((b, k) => landBall(b, base + k));
+      finishMove(closing);
+      return;
+    }
 
     busy = true;
-    const fly = document.createElement('div');
-    fly.className = 'ball fly';
-    fly.style.setProperty('--c', COLORS[color]);
-    fly.style.setProperty('--rot', `${(color * 47) % 360}deg`);
-    fly.style.width = fromRect.width + 'px';
-    fly.style.height = fromRect.height + 'px';
-    fly.style.left = '0px';
-    fly.style.top = '0px';
-    screen.wrap.appendChild(fly);
+    let pending = count;
+    destBalls.forEach((destBall, k) => {
+      const fromRect = fromRects[k];
+      const toRect = destBall.getBoundingClientRect();
+      const fly = document.createElement('div');
+      fly.className = 'ball fly';
+      fly.style.setProperty('--c', COLORS[color]);
+      fly.style.setProperty('--rot', `${(color * 47) % 360}deg`);
+      fly.style.width = fromRect.width + 'px';
+      fly.style.height = fromRect.height + 'px';
+      fly.style.left = '0px';
+      fly.style.top = '0px';
+      // Hold the ball at its start until its staggered flight begins.
+      fly.style.transform = `translate(${fromRect.left}px, ${fromRect.top}px)`;
+      screen.wrap.appendChild(fly);
 
-    const aboveY = destTubeRect.top - fromRect.height * 1.1;
-    const hoverY = Math.min(fromRect.top, aboveY);
-    const anim = fly.animate([
-      { transform: `translate(${fromRect.left}px, ${fromRect.top}px)` },
-      { transform: `translate(${fromRect.left}px, ${hoverY}px)`, offset: 0.15 },
-      { transform: `translate(${toRect.left}px, ${aboveY}px)`, offset: 0.6 },
-      { transform: `translate(${toRect.left}px, ${toRect.top}px)` },
-    ], { duration: 360, easing: 'ease-in-out' });
-    // Animations stall while the page is hidden (app sent to background mid-move):
-    // a timer guarantees the move completes and input is never locked.
-    let finished = false;
-    const finish = () => {
-      if (finished || !alive) return;
-      finished = true;
-      anim.cancel();
-      fly.remove();
-      busy = false;
-      land(destBall, height, closing);
-    };
-    anim.onfinish = finish;
-    setTimeout(finish, 600);
+      const aboveY = destTubeRect.top - fromRect.height * 1.1;
+      const hoverY = Math.min(fromRect.top, aboveY);
+      const anim = fly.animate([
+        { transform: `translate(${fromRect.left}px, ${fromRect.top}px)` },
+        { transform: `translate(${fromRect.left}px, ${hoverY}px)`, offset: 0.15 },
+        { transform: `translate(${toRect.left}px, ${aboveY}px)`, offset: 0.6 },
+        { transform: `translate(${toRect.left}px, ${toRect.top}px)` },
+      ], { duration: FLIGHT_MS, delay: k * STAGGER_MS, easing: 'ease-in-out' });
+      // Animations stall while the page is hidden (app sent to background mid-move):
+      // a timer guarantees the move completes and input is never locked.
+      let finished = false;
+      const finish = () => {
+        if (finished || !alive) return;
+        finished = true;
+        anim.cancel();
+        fly.remove();
+        landBall(destBall, base + k);
+        if (--pending === 0) { busy = false; finishMove(closing); }
+      };
+      anim.onfinish = finish;
+      setTimeout(finish, FLIGHT_MS + k * STAGGER_MS + 250);
+    });
   }
 
-  function land(destBall: HTMLElement, height: number, closing?: number): void {
+  function landBall(destBall: HTMLElement, height: number): void {
     destBall.classList.remove('hidden');
     bounce(destBall);
     sfx.land(height);
     haptic.tap();
+  }
+
+  function finishMove(closing?: number): void {
     if (closing !== undefined) {
       render({ closing });
       setTimeout(() => { sfx.close(); haptic.success(); }, 120);
