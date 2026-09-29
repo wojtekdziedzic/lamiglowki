@@ -58,6 +58,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     won = false;
     grid.textContent = '';
     grid.style.setProperty('--n', String(n));
+    grid.style.setProperty('--cell', grid.clientWidth / n + 'px');
     for (let i = 0; i < n * n; i++) {
       const r = Math.floor(i / n), c = i % n;
       const cell = document.createElement('button');
@@ -117,6 +118,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   const stop = observeSize(screen.wrap, (w, h) => {
     const side = Math.max(180, Math.floor(Math.min(w, h, 520)));
     grid.style.width = grid.style.height = side + 'px';
+    grid.style.setProperty('--cell', side / n + 'px');
   });
 
   startLevel(loadLevel(ID));
