@@ -3,6 +3,8 @@ import * as lo from '../src/games/lightsout/logic';
 import * as p15 from '../src/games/fifteen/logic';
 import * as sd from '../src/games/sudoku/logic';
 import * as bn from '../src/games/binairo/logic';
+import * as qn from '../src/games/queens/logic';
+import * as ms from '../src/games/minesweeper/logic';
 
 describe('lights out', () => {
   it('is deterministic, never pre-solved, and solved by its own presses', () => {
@@ -60,6 +62,59 @@ describe('binairo', () => {
     for (let l = 60; l < 64; l++) bn.generate(l);
     const avg = (performance.now() - t0) / 4;
     console.log(`binairo 10x10 avg ${avg.toFixed(0)} ms`);
+    expect(avg).toBeLessThan(400);
+  });
+});
+
+describe('queens', () => {
+  it('generates connected regions with exactly one solution', () => {
+    for (let l = 1; l <= 70; l += 3) {
+      const { n, regions, solution } = qn.generate(l);
+      expect(new Set(regions).size).toBe(n);
+      const sols = qn.solveAll(n, regions, 2);
+      expect(sols.length, `level ${l}`).toBe(1);
+      expect(sols[0]).toEqual(solution);
+    }
+  });
+
+  it('flags touching queens and shared regions', () => {
+    const regions = new Array(25).fill(0).map((_, i) => i % 5);
+    expect([...qn.conflicts(5, regions, new Set([0, 6]))].sort()).toEqual([0, 6]); // diagonal touch
+    expect(qn.conflicts(5, regions, new Set([0, 7])).size).toBe(0);
+  });
+
+  it('generates fast enough for a phone', () => {
+    const t0 = performance.now();
+    for (let l = 80; l < 85; l++) qn.generate(l);
+    const avg = (performance.now() - t0) / 5;
+    console.log(`queens 9x9 avg ${avg.toFixed(0)} ms`);
+    expect(avg).toBeLessThan(300);
+  });
+});
+
+describe('minesweeper', () => {
+  it('keeps the first tap safe and is solvable without guessing', () => {
+    let noGuess = 0, total = 0;
+    for (const l of [1, 10, 25, 40, 60]) {
+      const { rows, cols, mines } = ms.configForLevel(l);
+      for (const first of [0, Math.floor(rows / 2) * cols + Math.floor(cols / 2)]) {
+        const b = ms.generate(l, first);
+        expect(b.filter(Boolean).length).toBe(mines);
+        expect(b[first]).toBe(false);
+        ms.neighbors(rows, cols, first).forEach((j) => expect(b[j]).toBe(false));
+        total++;
+        if (ms.solvableWithoutGuessing(b, rows, cols, first)) noGuess++;
+      }
+    }
+    expect(noGuess).toBe(total);
+  });
+
+  it('is deterministic and fast enough for a phone', () => {
+    expect(ms.generate(30, 5)).toEqual(ms.generate(30, 5));
+    const t0 = performance.now();
+    for (let l = 60; l < 65; l++) ms.generate(l, 70);
+    const avg = (performance.now() - t0) / 5;
+    console.log(`minesweeper max board avg ${avg.toFixed(0)} ms`);
     expect(avg).toBeLessThan(400);
   });
 });

@@ -11,6 +11,7 @@ export const ICONS = {
   undo: svg('<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>'),
   tube: svg('<path d="M13 3h8"/><path d="M14 3v14a3 3 0 0 0 6 0V3"/><path d="M3 12h7"/><path d="M6.5 8.5v7"/>'),
   pencil: svg('<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><path d="m15 5 4 4"/>'),
+  flag: svg('<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'),
   erase: svg('<path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 19"/><path d="M22 21H7"/><path d="m5 11 9 9"/>'),
   sound: svg('<path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="cross" d="m16 9 6 6"/><path class="cross" d="m22 9-6 6"/>', 2.2),
 };
@@ -111,11 +112,13 @@ export interface WinOpts {
   title?: string;
   text: string;
   button?: string;
+  /** Loss card: no confetti, a gentle sound instead of the fanfare. */
+  lost?: boolean;
   onNext: () => void;
 }
 
 /** Celebration card with sound and confetti. Returns a function that closes it. */
-export function showWin(screen: Screen, { title = 'Brawo!', text, button = 'Następny poziom', onNext }: WinOpts): () => void {
+export function showWin(screen: Screen, { title = 'Brawo!', text, button = 'Następny poziom', lost = false, onNext }: WinOpts): () => void {
   const overlay = document.createElement('div');
   overlay.className = 'overlay show';
   overlay.setAttribute('role', 'dialog');
@@ -127,9 +130,14 @@ export function showWin(screen: Screen, { title = 'Brawo!', text, button = 'Nast
   btn.textContent = button;
   document.body.appendChild(overlay);
   btn.focus();
-  sfx.win();
-  haptic.success();
-  confetti();
+  if (lost) {
+    sfx.nope();
+    haptic.nope();
+  } else {
+    sfx.win();
+    haptic.success();
+    confetti();
+  }
 
   const close = () => {
     overlay.remove();

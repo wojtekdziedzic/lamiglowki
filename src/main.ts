@@ -7,8 +7,10 @@ import { lightsout } from './games/lightsout';
 import { fifteen } from './games/fifteen';
 import { sudoku } from './games/sudoku';
 import { binairo } from './games/binairo';
+import { queens } from './games/queens';
+import { minesweeper } from './games/minesweeper';
 
-const GAMES: GameModule[] = [ballsort, sudoku, binairo, lightsout, fifteen];
+const GAMES: GameModule[] = [ballsort, sudoku, queens, minesweeper, binairo, lightsout, fifteen];
 
 const root = document.getElementById('root')!;
 let cleanup: (() => void) | null = null;
