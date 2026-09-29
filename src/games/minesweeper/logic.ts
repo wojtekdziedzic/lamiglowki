@@ -91,13 +91,13 @@ export function solvableWithoutGuessing(mines: boolean[], rows: number, cols: nu
  * Mines are placed after the first tap: the tapped cell and its neighbours are always safe,
  * and the layout is picked so it can be finished by logic alone. Deterministic per (level, first tap).
  */
-export function generate(l: number, first: number): boolean[] {
+export function generate(l: number, first: number, salt = 0): boolean[] {
   const { rows, cols, mines } = configForLevel(l);
   const N = rows * cols;
   const safe = new Set([first, ...neighbors(rows, cols, first)]);
   let last: boolean[] = [];
   for (let attempt = 0; attempt < 300; attempt++) {
-    const rnd = mulberry32(l * 48271 + first * 131 + attempt * 7907);
+    const rnd = mulberry32(l * 48271 + first * 131 + attempt * 7907 + salt * 1000003);
     const pool = Array.from({ length: N }, (_, i) => i).filter((i) => !safe.has(i));
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(rnd() * (i + 1));

@@ -1,14 +1,15 @@
 import type { GameModule } from '../../types';
 import { COLORS } from '../../palette';
-import { loadLevel, saveLevel } from '../../storage';
+import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { generate, isSolved, slide, type Tiles } from './logic';
 
 const ID = 'fifteen';
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const board = document.createElement('div');
   board.className = 'p15-board';
@@ -30,8 +31,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    saveLevel(ID, l);
-    const lv = generate(l);
+    flow.enter(l);
+    const lv = generate(l, flow.salt);
     n = lv.n;
     start = lv.tiles;
     tiles = start.slice();
@@ -64,7 +65,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
       el.style.transform = `translate(${(i % n) * 100}%, ${Math.floor(i / n) * 100}%)`;
       el.classList.toggle('home', v === i + 1);
     });
-    screen.setTitle(`Poziom ${level}`);
+    screen.setTitle(flow.title(level));
     screen.setStatus(`Ruchy: ${moves}`);
   }
 
@@ -79,11 +80,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     render();
     if (isSolved(tiles)) {
       won = true;
-      saveLevel(ID, level + 1);
-      setTimeout(() => showWin(screen, {
-        text: `Ułożone w ${moves} ruchach`,
-        onNext: () => startLevel(level + 1),
-      }), 300);
+      flow.won(screen, level, `Ułożone w ${moves} ruchach`, startLevel);
     }
   });
 
@@ -92,7 +89,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     board.style.width = board.style.height = side + 'px';
   });
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
   return () => { stop(); screen.destroy(); };
 }
 
@@ -100,6 +97,7 @@ export const fifteen: GameModule = {
   id: ID,
   title: 'Piętnastka',
   tagline: 'Przesuwaj kafelki po kolei',
+  dailyLevel: 10,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true" font-family="inherit" font-weight="800" font-size="12" text-anchor="middle">
     <rect x="5" y="5" width="18" height="18" rx="4" fill="#ef4444"/><text x="14" y="18.5" fill="#fff">1</text>
     <rect x="25" y="5" width="18" height="18" rx="4" fill="#ef4444"/><text x="34" y="18.5" fill="#fff">2</text>

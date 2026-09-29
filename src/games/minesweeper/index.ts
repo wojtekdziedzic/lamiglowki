@@ -1,8 +1,8 @@
 import type { GameModule } from '../../types';
-import { loadLevel, saveLevel } from '../../storage';
+import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize, showWin } from '../../ui';
 import { configForLevel, counts, flood, generate, neighbors, type MinesConfig } from './logic';
 
 const ID = 'minesweeper';
@@ -11,7 +11,8 @@ const LONG_PRESS_MS = 380;
 const FLAG = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 4h11l-2.5 4 2.5 4H6z" fill="#ef4444"/></svg>`;
 const MINE = `<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v19M2.5 12h19M5.3 5.3l13.4 13.4M18.7 5.3 5.3 18.7"/></g><circle cx="12" cy="12" r="6" fill="currentColor"/><circle cx="10" cy="10" r="1.6" fill="#fff"/></svg>`;
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const grid = document.createElement('div');
   grid.className = 'ms-grid';
@@ -37,7 +38,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    saveLevel(ID, l);
+    flow.enter(l);
     cfg = configForLevel(l);
     const N = cfg.rows * cfg.cols;
     mines = null;
@@ -81,7 +82,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     });
     flagTool.setPressed(flagMode);
     grid.classList.toggle('flag-mode', flagMode);
-    screen.setTitle(`Poziom ${level}`);
+    screen.setTitle(flow.title(level));
     screen.setStatus(`${cfg.cols}×${cfg.rows} · miny: ${cfg.mines - flagged.filter(Boolean).length}`);
   }
 
@@ -96,7 +97,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   function open(i: number): void {
     if (over || flagged[i]) return;
     if (!mines) {
-      mines = generate(level, i);
+      mines = generate(level, i, flow.salt);
       cnt = counts(mines, cfg.rows, cfg.cols);
     }
     let targets = [i];
@@ -133,11 +134,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     over = true;
     mines.forEach((m, j) => { if (m) flagged[j] = true; });
     render();
-    saveLevel(ID, level + 1);
-    setTimeout(() => showWin(screen, {
-      text: `Poziom ${level} rozminowany`,
-      onNext: () => startLevel(level + 1),
-    }), 300);
+    flow.won(screen, level, `Poziom ${level} rozminowany`, startLevel);
   }
 
   // Tap opens (or flags in flag mode); long press and right click always flag.
@@ -183,7 +180,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   }
   const stop = observeSize(screen.wrap, (w, h) => { lastW = w; lastH = h; fit(); });
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
   return () => { clearTimeout(pressTimer); stop(); screen.destroy(); };
 }
 
@@ -191,6 +188,7 @@ export const minesweeper: GameModule = {
   id: ID,
   title: 'Saper',
   tagline: 'Bez zgadywania, sama logika',
+  dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true" font-family="inherit" font-weight="800" font-size="12" text-anchor="middle">
     <rect x="5" y="5" width="18" height="18" rx="3" fill="currentColor" opacity=".25"/>
     <rect x="25" y="5" width="18" height="18" rx="3" fill="rgba(255,255,255,.6)"/><text x="34" y="18.5" fill="#3b82f6">1</text>

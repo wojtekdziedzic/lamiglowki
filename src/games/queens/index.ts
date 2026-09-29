@@ -1,8 +1,8 @@
 import type { GameModule } from '../../types';
-import { loadLevel, saveLevel } from '../../storage';
+import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { conflicts, generate } from './logic';
 
 const ID = 'queens';
@@ -17,7 +17,8 @@ const CROWN = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.
 
 type Mark = 0 | 1 | 2; // empty, X, queen
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const grid = document.createElement('div');
   grid.className = 'qn-grid';
@@ -49,8 +50,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    saveLevel(ID, l);
-    const lv = generate(l);
+    flow.enter(l);
+    const lv = generate(l, flow.salt);
     n = lv.n;
     regions = lv.regions;
     marks = new Array(n * n).fill(0);
@@ -89,7 +90,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
         `Wiersz ${Math.floor(i / n) + 1}, kolumna ${(i % n) + 1}, region ${regions[i] + 1}: ${['puste', 'krzyżyk', 'królowa'][marks[i]]}`);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(`Poziom ${level}`);
+    screen.setTitle(flow.title(level));
     screen.setStatus(`${n}×${n} · królowe: ${q.size}/${n}`);
   }
 
@@ -104,11 +105,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     const q = queens();
     if (q.size === n && conflicts(n, regions, q).size === 0) {
       won = true;
-      saveLevel(ID, level + 1);
-      setTimeout(() => showWin(screen, {
-        text: `Poziom ${level} rozwiązany`,
-        onNext: () => startLevel(level + 1),
-      }), 300);
+      flow.won(screen, level, `Poziom ${level} rozwiązany`, startLevel);
     } else if (marks[i] === 2 && conflicts(n, regions, q).has(i)) {
       sfx.nope();
       haptic.nope();
@@ -121,7 +118,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     grid.style.setProperty('--cell', side / n + 'px');
   });
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
   return () => { stop(); screen.destroy(); };
 }
 
@@ -129,6 +126,7 @@ export const queens: GameModule = {
   id: ID,
   title: 'Królowe',
   tagline: 'Jedna w rzędzie, kolumnie i kolorze',
+  dailyLevel: 30,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">
     <rect x="5" y="5" width="19" height="19" rx="3" fill="#f9a8a8"/><rect x="24" y="5" width="19" height="19" rx="3" fill="#b8e68f"/>
     <rect x="5" y="24" width="19" height="19" rx="3" fill="#8fd8e6"/><rect x="24" y="24" width="19" height="19" rx="3" fill="#fcd58a"/>

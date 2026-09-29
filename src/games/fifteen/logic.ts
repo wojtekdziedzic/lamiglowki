@@ -33,10 +33,10 @@ export function slide(t: Tiles, n: number, i: number): number {
 }
 
 /** Deterministic per level; scrambled by legal moves from the solved state, so always solvable. */
-export function generate(l: number): { n: number; tiles: Tiles } {
+export function generate(l: number, salt = 0): { n: number; tiles: Tiles } {
   const n = sizeForLevel(l);
   const steps = Math.min(400, 20 + l * 8);
-  const rnd = mulberry32(l * 31337 + 7);
+  const rnd = mulberry32(l * 31337 + 7 + salt * 1000003);
   const t = solved(n);
   let prev = -1;
   for (let s = 0; s < steps || isSolved(t); s++) {

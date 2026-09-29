@@ -1,13 +1,12 @@
-import type { GameModule } from '../../types';
+import type { GameContext, GameModule } from '../../types';
 import { CAP, COLORS } from './config';
 import { isSolved, isTubeDone, topRun, type State } from './rules';
 import { generate } from './generator';
 import { Game } from './game';
-import { loadLevel, saveLevel } from '../../storage';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
 import { bounce, reducedMotion } from '../../fx';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 
 const ID = 'ballsort';
 
@@ -24,7 +23,8 @@ function prefetch(l: number): void {
   else setTimeout(run, 300);
 }
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const boardEl = document.createElement('div');
   boardEl.className = 'board';
@@ -104,7 +104,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
       }
       boardEl.appendChild(el);
     });
-    screen.setTitle(`Poziom ${game.level}`);
+    screen.setTitle(flow.title(game.level));
     screen.setStatus(`Ruchy: ${game.moves}`);
     undoTool.setBadge(game.undosLeft);
     tubeTool.setBadge(game.extraTubesLeft);
@@ -147,8 +147,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   }
 
   function startLevel(l: number): void {
-    saveLevel(ID, l);
-    game.start(l, levelLayout(l));
+    flow.enter(l);
+    game.start(l, flow.daily ? generate(l, flow.salt).tubes : levelLayout(l));
     cache.delete(l - 1);
     selected = -1;
     render();
@@ -254,16 +254,9 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     }
     if (isSolved(game.tubes)) {
       busy = true;
-      saveLevel(ID, game.level + 1);
-      setTimeout(() => {
-        if (!alive) return;
-        busy = false;
-        showWin(screen, {
-          text: `Poziom ${game.level} ukończony w ${game.moves} ruchach`,
-          onNext: () => startLevel(game.level + 1),
-        });
-        prefetch(game.level + 1);
-      }, 450);
+      flow.won(screen, game.level, `Poziom ${game.level} ukończony w ${game.moves} ruchach`, startLevel, 450);
+      setTimeout(() => { busy = false; }, 450);
+      if (!flow.daily) prefetch(game.level + 1);
     }
   }
 
@@ -283,7 +276,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
   boardEl.addEventListener('click', onClick);
   boardEl.addEventListener('keydown', onKey);
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
 
   return () => {
     alive = false;
@@ -296,6 +289,7 @@ export const ballsort: GameModule = {
   id: ID,
   title: 'Sortuj kulki',
   tagline: 'Ułóż kolory w probówkach',
+  dailyLevel: 30,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">
     <path d="M10 8v26a6 6 0 0 0 12 0V8" fill="rgba(255,255,255,.35)" stroke="currentColor" stroke-width="2.5"/>
     <path d="M26 8v26a6 6 0 0 0 12 0V8" fill="rgba(255,255,255,.35)" stroke="currentColor" stroke-width="2.5"/>

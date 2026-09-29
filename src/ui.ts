@@ -1,6 +1,8 @@
 import { isMuted, setMuted, sfx } from './audio';
 import { confetti } from './fx';
 import { haptic } from './haptics';
+import { loadLevel, saveLevel } from './storage';
+import type { GameContext } from './types';
 
 const svg = (body: string, width = 2.4) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -38,6 +40,8 @@ export interface Screen {
   tool(opts: ToolOpts): Tool;
   /** Registers the open win card so leaving the game also closes it. */
   setWinCloser(fn: (() => void) | null): void;
+  /** False once the player has left the game. */
+  readonly alive: boolean;
   destroy(): void;
 }
 
@@ -73,6 +77,7 @@ export function gameScreen(root: HTMLElement, onBack: () => void): Screen {
   const status = root.querySelector<HTMLElement>('.moves')!;
   const toolbar = root.querySelector<HTMLElement>('.toolbar')!;
   let closeWin: (() => void) | null = null;
+  let alive = true;
 
   return {
     wrap: root.querySelector<HTMLElement>('.board-wrap')!,
@@ -101,7 +106,9 @@ export function gameScreen(root: HTMLElement, onBack: () => void): Screen {
       };
     },
     setWinCloser: (fn) => { closeWin = fn; },
+    get alive() { return alive; },
     destroy() {
+      alive = false;
       closeWin?.();
       root.textContent = '';
     },
@@ -119,6 +126,7 @@ export interface WinOpts {
 
 /** Celebration card with sound and confetti. Returns a function that closes it. */
 export function showWin(screen: Screen, { title = 'Brawo!', text, button = 'Następny poziom', lost = false, onNext }: WinOpts): () => void {
+  if (!screen.alive) return () => {}; // the player left before a delayed card fired
   const overlay = document.createElement('div');
   overlay.className = 'overlay show';
   overlay.setAttribute('role', 'dialog');
@@ -146,6 +154,43 @@ export function showWin(screen: Screen, { title = 'Brawo!', text, button = 'Nast
   screen.setWinCloser(close);
   btn.addEventListener('click', () => { close(); onNext(); });
   return close;
+}
+
+/**
+ * Level bookkeeping shared by all games: regular play advances and persists the level,
+ * the daily puzzle plays one fixed board and reports back instead.
+ */
+export interface LevelFlow {
+  daily: boolean;
+  /** Level to open with. */
+  initial: number;
+  /** Seed salt for the generators (0 for regular levels). */
+  salt: number;
+  title(level: number, prefix?: string): string;
+  /** Call when a level starts. */
+  enter(level: number): void;
+  /** Call the moment the board is solved; shows the card after a short delay. */
+  won(screen: Screen, level: number, text: string, next: (level: number) => void, delayMs?: number): void;
+}
+
+export function levelFlow(id: string, ctx: GameContext): LevelFlow {
+  const daily = ctx.daily;
+  return {
+    daily: !!daily,
+    initial: daily ? daily.level : loadLevel(id),
+    salt: daily ? daily.salt : 0,
+    title: (level, prefix = 'Poziom') => (daily ? 'Zagadka dnia' : `${prefix} ${level}`),
+    enter(level) { if (!daily) saveLevel(id, level); },
+    won(screen, level, text, next, delayMs = 300) {
+      // Persist right away so leaving before tapping "next" keeps the progress.
+      if (daily) daily.solved();
+      else saveLevel(id, level + 1);
+      setTimeout(() => {
+        if (daily) showWin(screen, { text: 'Zagadka dnia rozwiązana', button: 'Wróć', onNext: ctx.back });
+        else showWin(screen, { text, onNext: () => next(level + 1) });
+      }, delayMs);
+    },
+  };
 }
 
 /** Calls cb with the element's content size now and on every resize; returns the disconnect. */

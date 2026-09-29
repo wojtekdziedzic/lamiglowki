@@ -43,15 +43,15 @@ export interface Generated {
   nodes: number;
 }
 
-/** Deterministic: the same level number always yields the same layout. */
-export function generate(l: number): Generated {
+/** Deterministic per (level, salt); salt 0 is the regular sequence, the daily puzzle passes the day. */
+export function generate(l: number, salt = 0): Generated {
   const colors = colorsForLevel(l);
   const want = colors < COLORS.length ? 1 : CANDIDATES;
   const found: Generated[] = [];
   let fallback: State | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS && found.length < want; attempt++) {
-    const state = shuffled(colors, mulberry32(l * 9973 + attempt * 7919));
+    const state = shuffled(colors, mulberry32(l * 9973 + attempt * 7919 + salt * 1000003));
     if (!state) continue;
     fallback ??= state;
     const r = solve(state, NODE_LIMIT);

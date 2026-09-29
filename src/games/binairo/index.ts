@@ -1,13 +1,14 @@
 import type { GameModule } from '../../types';
-import { loadLevel, saveLevel } from '../../storage';
+import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { errors, generate, isComplete, type Grid } from './logic';
 
 const ID = 'binairo';
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const grid = document.createElement('div');
   grid.className = 'bn-grid';
@@ -39,8 +40,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    saveLevel(ID, l);
-    const lv = generate(l);
+    flow.enter(l);
+    const lv = generate(l, flow.salt);
     n = lv.n;
     puzzle = lv.puzzle;
     g = puzzle.slice();
@@ -70,7 +71,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
         `Wiersz ${Math.floor(i / n) + 1}, kolumna ${(i % n) + 1}: ${g[i] === -1 ? 'puste' : NAMES[g[i]]}${puzzle[i] !== -1 ? ', stałe' : ''}`);
     });
     undoTool.setDisabled(!history.length);
-    screen.setTitle(`Poziom ${level}`);
+    screen.setTitle(flow.title(level));
     screen.setStatus(`${n}×${n} · puste: ${g.filter((v) => v === -1).length}`);
   }
 
@@ -86,11 +87,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     render();
     if (isComplete(g, n)) {
       won = true;
-      saveLevel(ID, level + 1);
-      setTimeout(() => showWin(screen, {
-        text: `Poziom ${level} ułożony`,
-        onNext: () => startLevel(level + 1),
-      }), 300);
+      flow.won(screen, level, `Poziom ${level} ułożony`, startLevel);
     }
   });
 
@@ -99,7 +96,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     grid.style.width = grid.style.height = side + 'px';
   });
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
   return () => { stop(); screen.destroy(); };
 }
 
@@ -107,6 +104,7 @@ export const binairo: GameModule = {
   id: ID,
   title: 'Dwa kolory',
   tagline: 'Po równo, bez trzech w rzędzie',
+  dailyLevel: 15,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">
     ${[0, 1, 2].map((r) => [0, 1, 2].map((c) => {
       const v = [0, 1, 0, 1, 0, 1, 1, 0, 1][r * 3 + c];

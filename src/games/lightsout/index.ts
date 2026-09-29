@@ -1,13 +1,14 @@
 import type { GameModule } from '../../types';
-import { loadLevel, saveLevel } from '../../storage';
+import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, observeSize, showWin } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { generate, isSolved, press, type Board } from './logic';
 
 const ID = 'lightsout';
 
-function mount(root: HTMLElement, ctx: { back(): void }): () => void {
+function mount(root: HTMLElement, ctx: GameContext): () => void {
+  const flow = levelFlow(ID, ctx);
   const screen = gameScreen(root, ctx.back);
   const grid = document.createElement('div');
   grid.className = 'lo-grid';
@@ -29,8 +30,8 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    saveLevel(ID, l);
-    const lv = generate(l);
+    flow.enter(l);
+    const lv = generate(l, flow.salt);
     n = lv.n;
     start = lv.board;
     board = start.slice();
@@ -56,7 +57,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
       el.classList.toggle('on', board[i]);
       el.setAttribute('aria-label', `Pole ${Math.floor(i / n) + 1}, ${(i % n) + 1}: ${board[i] ? 'zapalone' : 'zgaszone'}`);
     });
-    screen.setTitle(`Poziom ${level}`);
+    screen.setTitle(flow.title(level));
     const lit = board.filter(Boolean).length;
     screen.setStatus(`Ruchy: ${moves} · zapalone: ${lit}`);
   }
@@ -71,11 +72,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     render();
     if (isSolved(board)) {
       won = true;
-      saveLevel(ID, level + 1);
-      setTimeout(() => showWin(screen, {
-        text: `Wszystko zgaszone w ${moves} ruchach`,
-        onNext: () => startLevel(level + 1),
-      }), 250);
+      flow.won(screen, level, `Wszystko zgaszone w ${moves} ruchach`, startLevel, 250);
     }
   });
 
@@ -84,7 +81,7 @@ function mount(root: HTMLElement, ctx: { back(): void }): () => void {
     grid.style.width = grid.style.height = side + 'px';
   });
 
-  startLevel(loadLevel(ID));
+  startLevel(flow.initial);
   return () => { stop(); screen.destroy(); };
 }
 
@@ -92,6 +89,7 @@ export const lightsout: GameModule = {
   id: ID,
   title: 'Zgaś światła',
   tagline: 'Każde kliknięcie przełącza sąsiadów',
+  dailyLevel: 20,
   icon: `<svg viewBox="0 0 48 48" aria-hidden="true">
     ${[0, 1, 2].map((r) => [0, 1, 2].map((c) => {
       const on = [1, 3, 4, 5, 7].includes(r * 3 + c);

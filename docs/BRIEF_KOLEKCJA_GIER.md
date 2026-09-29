@@ -17,6 +17,15 @@ Data: 2026-09-29   Route: E (popyt = właściciel jest użytkownikiem)   Werdykt
 4. Sudoku: generator z gwarancją jednego rozwiązania, trudność = liczba podpowiedzi, notatki, gumka, cofanie, zapis stanu w trakcie.
 5. Binairo: 6x6 do 10x10, jedno rozwiązanie, podświetlanie błędów, cofanie.
 
+## v1.1 (2026-09-29, Route E, akcept PO)
+Stan wyjściowy: 7 gier LIVE na dziedzic.cloud/lamiglowki. A-1 nieaktualne (apka publiczna);
+nowy sygnał sukcesu: liczba pobrań APK z logów serwera.
+1. Sudoku 6x6 (wariant silnika Sudoku, parametr rozmiaru i bloków 2x3).
+2. Słońca i księżyce: 6x6, po równo w wierszu/kolumnie, max 2 obok siebie, znaki "=" i "×" między polami; jedno rozwiązanie.
+3. Zagadka dnia: jedna plansza dziennie z każdej gry (ziarno = data), seria dni, bez wpływu na poziomy.
+4. Wieżowce: kwadrat łaciński NxN z podpowiedziami widoczności na brzegach; jedno rozwiązanie.
+SKEPTIC: nowe gry WEAK (brak sygnału znudzenia), zagadka dnia jako główna dźwignia powrotów.
+
 ## Poza zakresem v1
 Reklamy/IAP, Play Store, konta, rankingi, Królowe, Saper, nonogramy, Połącz kropki.
 

@@ -65,10 +65,10 @@ function connectedWithout(n: number, regions: number[], reg: number, without: nu
 }
 
 /** Deterministic per level; the layout always has exactly one solution. */
-export function generate(l: number): QueensLevel {
+export function generate(l: number, salt = 0): QueensLevel {
   const n = sizeForLevel(l);
   for (let attempt = 0; ; attempt++) {
-    const rnd = mulberry32(l * 92821 + attempt * 6151 + 3);
+    const rnd = mulberry32(l * 92821 + attempt * 6151 + 3 + salt * 1000003);
 
     // 1. Random non-touching queen placement (a permutation with no adjacent columns).
     const solution: number[] = [];

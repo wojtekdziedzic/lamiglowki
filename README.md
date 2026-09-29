@@ -1,7 +1,8 @@
 # Łamigłówki
 
-Seven logic puzzles in one Android app: ball sort, Sudoku, Queens, no-guess Minesweeper,
-Binairo ("Dwa kolory"), Lights Out and the 15-puzzle. No ads, no accounts, works offline.
+Ten logic puzzles in one Android app: ball sort, Sudoku (9x9 and 6x6), Queens, Suns and Moons
+(Tango-style), Skyscrapers, no-guess Minesweeper, Binairo ("Dwa kolory"), Lights Out and the
+15-puzzle, plus a daily puzzle that is the same for everyone. No ads, no accounts, works offline.
 
 Download: https://dziedzic.cloud/lamiglowki
 
@@ -12,7 +13,9 @@ and checks them with a solver before you see them:
 
 - **Ball sort**: DFS solver guarantees solvability; past the full palette, difficulty comes from
   picking harder layouts (solver effort percentile) instead of adding colors.
-- **Sudoku, Binairo, Queens**: puzzles are reduced only while the solution stays unique.
+- **Sudoku, Binairo, Queens, Suns and Moons, Skyscrapers**: clues are removed only while the
+  solution stays unique.
+- **Daily puzzle**: each generator takes a salt; the day number seeds one board per game per day.
 - **Minesweeper**: mines are placed after the first tap and the board is re-rolled until a pure
   deduction solver can clear it, so no guessing is ever needed.
 - **Lights Out, 15-puzzle**: scrambled from the solved state with legal moves.

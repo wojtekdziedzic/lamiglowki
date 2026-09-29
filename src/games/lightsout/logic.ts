@@ -34,11 +34,11 @@ export interface LightsLevel {
  * Deterministic per level. Built backwards from a dark board, so it is always solvable.
  * Presses are distinct cells because pressing a cell twice cancels out.
  */
-export function generate(l: number): LightsLevel {
+export function generate(l: number, salt = 0): LightsLevel {
   const n = sizeForLevel(l);
   const k = pressesForLevel(l, n);
   for (let attempt = 0; ; attempt++) {
-    const rnd = mulberry32(l * 7717 + attempt * 104729 + 13);
+    const rnd = mulberry32(l * 7717 + attempt * 104729 + 13 + salt * 1000003);
     const cells = Array.from({ length: n * n }, (_, i) => i);
     for (let i = cells.length - 1; i > 0; i--) {
       const j = Math.floor(rnd() * (i + 1));

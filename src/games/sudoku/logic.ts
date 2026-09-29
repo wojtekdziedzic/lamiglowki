@@ -1,32 +1,56 @@
 import { mulberry32 } from '../../rng';
 
-/** 81 cells, row-major, 0 = empty. */
+/** n*n cells, row-major, 0 = empty. */
 export type Grid = number[];
 
-export const row = (i: number) => (i / 9) | 0;
-export const col = (i: number) => i % 9;
-export const box = (i: number) => ((row(i) / 3) | 0) * 3 + ((col(i) / 3) | 0);
+/** Board shape: n digits, boxes of br rows x bc columns. */
+export interface Spec { n: number; br: number; bc: number }
 
-/** Indices sharing a row, column or box with i (excluding i). */
-export const PEERS: number[][] = Array.from({ length: 81 }, (_, i) => {
-  const out: number[] = [];
-  for (let j = 0; j < 81; j++) {
-    if (j !== i && (row(j) === row(i) || col(j) === col(i) || box(j) === box(i))) out.push(j);
-  }
-  return out;
-});
+export const SPEC9: Spec = { n: 9, br: 3, bc: 3 };
+export const SPEC6: Spec = { n: 6, br: 2, bc: 3 };
 
-const ALL = 0x3fe; // bits 1..9
+export interface Geometry extends Spec {
+  cells: number;
+  row: (i: number) => number;
+  col: (i: number) => number;
+  box: (i: number) => number;
+  /** Indices sharing a row, column or box with i (excluding i). */
+  peers: number[][];
+}
+
+const geoCache = new Map<string, Geometry>();
+export function geometry(spec: Spec): Geometry {
+  const key = `${spec.n}:${spec.br}:${spec.bc}`;
+  let g = geoCache.get(key);
+  if (g) return g;
+  const { n, br, bc } = spec;
+  const row = (i: number) => (i / n) | 0;
+  const col = (i: number) => i % n;
+  const box = (i: number) => ((row(i) / br) | 0) * (n / bc) + ((col(i) / bc) | 0);
+  const peers = Array.from({ length: n * n }, (_, i) => {
+    const out: number[] = [];
+    for (let j = 0; j < n * n; j++) {
+      if (j !== i && (row(j) === row(i) || col(j) === col(i) || box(j) === box(i))) out.push(j);
+    }
+    return out;
+  });
+  g = { ...spec, cells: n * n, row, col, box, peers };
+  geoCache.set(key, g);
+  return g;
+}
+
 const popcount = (m: number) => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
 
 /**
  * Backtracking with bitmasks and "fewest candidates first".
  * onSolution returns true to stop the search. Returns false if the givens conflict.
  */
-function search(start: Grid, order: (mask: number) => number[], onSolution: (g: Grid) => boolean): boolean {
+function search(start: Grid, geo: Geometry, order: (mask: number) => number[], onSolution: (g: Grid) => boolean): boolean {
+  const { n, cells, row, col, box } = geo;
+  const all = (1 << (n + 1)) - 2; // bits 1..n
   const g = start.slice();
-  const rows = new Array(9).fill(0), cols = new Array(9).fill(0), boxes = new Array(9).fill(0);
-  for (let i = 0; i < 81; i++) {
+  const rows = new Array(n).fill(0), cols = new Array(n).fill(0), boxes = new Array(n).fill(0);
+  for (let i = 0; i < cells; i++) {
     const v = g[i];
     if (!v) continue;
     const bit = 1 << v;
@@ -34,10 +58,10 @@ function search(start: Grid, order: (mask: number) => number[], onSolution: (g: 
     rows[row(i)] |= bit; cols[col(i)] |= bit; boxes[box(i)] |= bit;
   }
   const rec = (): boolean => {
-    let best = -1, bestMask = 0, bestCount = 10;
-    for (let i = 0; i < 81; i++) {
+    let best = -1, bestMask = 0, bestCount = n + 1;
+    for (let i = 0; i < cells; i++) {
       if (g[i]) continue;
-      const mask = ALL & ~(rows[row(i)] | cols[col(i)] | boxes[box(i)]);
+      const mask = all & ~(rows[row(i)] | cols[col(i)] | boxes[box(i)]);
       const c = popcount(mask);
       if (c === 0) return false;
       if (c < bestCount) { best = i; bestMask = mask; bestCount = c; if (c === 1) break; }
@@ -58,37 +82,39 @@ function search(start: Grid, order: (mask: number) => number[], onSolution: (g: 
 
 const ascending = (mask: number) => {
   const out: number[] = [];
-  for (let v = 1; v <= 9; v++) if (mask & (1 << v)) out.push(v);
+  for (let v = 1; mask >> v; v++) if (mask & (1 << v)) out.push(v);
   return out;
 };
 
 /** Number of solutions, counting stops at limit. */
-export function countSolutions(g: Grid, limit = 2): number {
+export function countSolutions(g: Grid, spec: Spec = SPEC9, limit = 2): number {
   let count = 0;
-  const ok = search(g, ascending, () => ++count >= limit);
+  const ok = search(g, geometry(spec), ascending, () => ++count >= limit);
   return ok ? count : 0;
 }
 
-export function solve(g: Grid): Grid | null {
-  let out: Grid | null = null;
-  search(g, ascending, (s) => { out = s.slice(); return true; });
-  return out;
+/** Clue target: 9x9 goes 44 down to 24; 6x6 goes 20 down to 10 (removal stalls a bit above). */
+export function targetClues(l: number, spec: Spec = SPEC9): number {
+  return spec.n === 9
+    ? Math.max(24, 44 - Math.floor((l - 1) / 2))
+    : Math.max(10, 20 - Math.floor((l - 1) / 3));
 }
 
-/** Clue count target: 44 on level 1 down to the 24 floor (removal usually stalls a bit above it). */
-export function targetClues(l: number): number {
-  return Math.max(24, 44 - Math.floor((l - 1) / 2));
-}
-
-export function difficultyLabel(clues: number): string {
-  return clues >= 38 ? 'łatwe' : clues >= 30 ? 'średnie' : 'trudne';
+export function difficultyLabel(clues: number, spec: Spec = SPEC9): string {
+  const share = clues / (spec.n * spec.n);
+  return share >= 0.46 ? 'łatwe' : share >= 0.36 ? 'średnie' : 'trudne';
 }
 
 export interface SudokuLevel { puzzle: Grid; solution: Grid; clues: number }
 
-/** Deterministic per level; the puzzle always has exactly one solution. */
-export function generate(l: number): SudokuLevel {
-  const rnd = mulberry32(l * 2654435761 + 99);
+/**
+ * Deterministic per (level, salt); the puzzle always has exactly one solution.
+ * Salt 0 is the regular level sequence; the daily puzzle passes the day number.
+ */
+export function generate(l: number, spec: Spec = SPEC9, salt = 0): SudokuLevel {
+  const geo = geometry(spec);
+  const base = spec.n === 9 ? l * 2654435761 + 99 : l * 40499 + 7;
+  const rnd = mulberry32(base + salt * 1000003);
   const shuffled = <T>(a: T[]) => {
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(rnd() * (i + 1));
@@ -98,27 +124,28 @@ export function generate(l: number): SudokuLevel {
   };
 
   let solution: Grid = [];
-  search(new Array(81).fill(0), (mask) => shuffled(ascending(mask)), (s) => { solution = s.slice(); return true; });
+  search(new Array(geo.cells).fill(0), geo, (mask) => shuffled(ascending(mask)), (s) => { solution = s.slice(); return true; });
 
   const puzzle = solution.slice();
-  const target = targetClues(l);
-  let clues = 81;
-  for (const i of shuffled(Array.from({ length: 81 }, (_, k) => k))) {
+  const target = targetClues(l, spec);
+  let clues = geo.cells;
+  for (const i of shuffled(Array.from({ length: geo.cells }, (_, k) => k))) {
     if (clues <= target) break;
     const v = puzzle[i];
     puzzle[i] = 0;
-    if (countSolutions(puzzle, 2) === 1) clues--;
+    if (countSolutions(puzzle, spec, 2) === 1) clues--;
     else puzzle[i] = v;
   }
   return { puzzle, solution, clues };
 }
 
 /** Cells whose value repeats in a row, column or box. */
-export function conflicts(g: Grid): Set<number> {
+export function conflicts(g: Grid, spec: Spec = SPEC9): Set<number> {
+  const { peers } = geometry(spec);
   const out = new Set<number>();
-  for (let i = 0; i < 81; i++) {
+  for (let i = 0; i < g.length; i++) {
     if (!g[i]) continue;
-    for (const j of PEERS[i]) if (g[j] === g[i]) { out.add(i); break; }
+    for (const j of peers[i]) if (g[j] === g[i]) { out.add(i); break; }
   }
   return out;
 }

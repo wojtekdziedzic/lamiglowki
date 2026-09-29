@@ -5,6 +5,8 @@ import * as sd from '../src/games/sudoku/logic';
 import * as bn from '../src/games/binairo/logic';
 import * as qn from '../src/games/queens/logic';
 import * as ms from '../src/games/minesweeper/logic';
+import * as tg from '../src/games/tango/logic';
+import * as sk from '../src/games/skyscrapers/logic';
 
 describe('lights out', () => {
   it('is deterministic, never pre-solved, and solved by its own presses', () => {
@@ -119,6 +121,87 @@ describe('minesweeper', () => {
   });
 });
 
+describe('tango', () => {
+  it('generates valid puzzles with signs and a unique solution', () => {
+    for (let l = 1; l <= 60; l += 7) {
+      const { puzzle, solution, edges } = tg.generate(l);
+      expect(tg.isComplete(solution, edges)).toBe(true);
+      puzzle.forEach((v, i) => { if (v !== -1) expect(v).toBe(solution[i]); });
+      edges.forEach((e) => expect((solution[e.a] === solution[e.b])).toBe(e.eq));
+      expect(tg.countSolutions(puzzle, edges, 2), `level ${l}`).toBe(1);
+    }
+  });
+
+  it('flags a violated sign', () => {
+    const g = new Array(36).fill(-1);
+    g[0] = 0; g[1] = 1;
+    expect([...tg.errors(g, [{ a: 0, b: 1, eq: true }])].sort()).toEqual([0, 1]);
+    expect(tg.errors(g, [{ a: 0, b: 1, eq: false }]).size).toBe(0);
+  });
+
+  it('is deterministic and fast', () => {
+    expect(tg.generate(9).puzzle).toEqual(tg.generate(9).puzzle);
+    const t0 = performance.now();
+    for (let l = 40; l < 45; l++) tg.generate(l);
+    expect((performance.now() - t0) / 5).toBeLessThan(300);
+  });
+});
+
+describe('skyscrapers', () => {
+  it('counts visible buildings', () => {
+    expect(sk.visible([1, 2, 3, 4])).toBe(4);
+    expect(sk.visible([4, 3, 2, 1])).toBe(1);
+    expect(sk.visible([2, 1, 4, 3])).toBe(2);
+  });
+
+  it('generates Latin squares whose clues and givens pin one solution', () => {
+    for (const l of [1, 8, 9, 20, 26, 45]) {
+      const { n, clues, givens, solution } = sk.generate(l);
+      for (let k = 0; k < n; k++) {
+        expect(new Set(solution.slice(k * n, k * n + n)).size).toBe(n);
+        expect(new Set(Array.from({ length: n }, (_, r) => solution[r * n + k])).size).toBe(n);
+      }
+      const full = sk.cluesOf(n, solution);
+      for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+        clues[side].forEach((v, k) => { if (v) expect(v).toBe(full[side][k]); });
+      }
+      givens.forEach((v, i) => { if (v) expect(v).toBe(solution[i]); });
+      const sols = sk.countSolutions(n, clues, givens, 2);
+      expect(sols.length, `level ${l}`).toBe(1);
+      expect(sols[0]).toEqual(solution);
+    }
+  });
+
+  it('generates a 6x6 level fast enough for a phone', () => {
+    const t0 = performance.now();
+    for (let l = 40; l < 44; l++) sk.generate(l);
+    const avg = (performance.now() - t0) / 4;
+    console.log(`skyscrapers 6x6 avg ${avg.toFixed(0)} ms`);
+    expect(avg).toBeLessThan(400);
+  });
+});
+
+describe('daily seeds', () => {
+  // Same day -> same board for everyone; salt 0 must keep the regular level sequence.
+  const day = 20725;
+  const cases: [string, (salt: number) => unknown][] = [
+    ['lightsout', (s) => lo.generate(20, s).board],
+    ['fifteen', (s) => p15.generate(10, s).tiles],
+    ['binairo', (s) => bn.generate(15, s).puzzle],
+    ['queens', (s) => qn.generate(30, s).regions],
+    ['minesweeper', (s) => ms.generate(20, 40, s)],
+    ['tango', (s) => tg.generate(20, s).puzzle],
+    ['skyscrapers', (s) => sk.generate(15, s).clues],
+    ['sudoku6', (s) => sd.generate(15, sd.SPEC6, s).puzzle],
+  ];
+  for (const [name, gen] of cases) {
+    it(`${name}: deterministic per day and different from the regular level`, () => {
+      expect(gen(day)).toEqual(gen(day));
+      expect(gen(day)).not.toEqual(gen(0));
+    });
+  }
+});
+
 describe('sudoku', () => {
   it('generates valid puzzles with a unique solution', () => {
     for (const l of [1, 10, 30, 60]) {
@@ -127,8 +210,28 @@ describe('sudoku', () => {
       expect(solution.every((v) => v >= 1 && v <= 9)).toBe(true);
       expect(puzzle.filter((v) => v).length).toBe(clues);
       puzzle.forEach((v, i) => { if (v) expect(v).toBe(solution[i]); });
-      expect(sd.countSolutions(puzzle, 2)).toBe(1);
+      expect(sd.countSolutions(puzzle, sd.SPEC9, 2)).toBe(1);
     }
+  });
+
+  it('6x6 uses 2x3 boxes and keeps a unique solution', () => {
+    for (const l of [1, 15, 40]) {
+      const { puzzle, solution, clues } = sd.generate(l, sd.SPEC6);
+      expect(solution.length).toBe(36);
+      expect(sd.conflicts(solution, sd.SPEC6).size).toBe(0);
+      expect(solution.every((v) => v >= 1 && v <= 6)).toBe(true);
+      expect(puzzle.filter((v) => v).length).toBe(clues);
+      expect(sd.countSolutions(puzzle, sd.SPEC6, 2)).toBe(1);
+    }
+    // Box of cell (1,2) spans rows 0-1 and columns 0-2
+    const geo = sd.geometry(sd.SPEC6);
+    expect(geo.box(1 * 6 + 2)).toBe(geo.box(0));
+    expect(geo.box(2 * 6 + 0)).not.toBe(geo.box(0));
+  });
+
+  it('salt 0 keeps the regular sequence and other salts differ', () => {
+    expect(sd.generate(7, sd.SPEC9, 0).puzzle).toEqual(sd.generate(7).puzzle);
+    expect(sd.generate(7, sd.SPEC9, 20000).puzzle).not.toEqual(sd.generate(7).puzzle);
   });
 
   it('is deterministic and gets sparser with level', () => {

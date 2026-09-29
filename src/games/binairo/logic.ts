@@ -102,9 +102,9 @@ export function countSolutions(g: Grid, n: number, limit = 2): number {
 export interface BinairoLevel { n: number; puzzle: Grid; solution: Grid }
 
 /** Deterministic per level; the puzzle always has exactly one solution. */
-export function generate(l: number): BinairoLevel {
+export function generate(l: number, salt = 0): BinairoLevel {
   const n = sizeForLevel(l);
-  const rnd = mulberry32(l * 40503 + 17);
+  const rnd = mulberry32(l * 40503 + 17 + salt * 1000003);
   let solution: Grid = [];
   search(new Array(n * n).fill(-1), n, () => (rnd() < 0.5 ? [0, 1] : [1, 0]), (s) => { solution = s.slice(); return true; });
 

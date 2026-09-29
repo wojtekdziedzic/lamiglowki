@@ -1,37 +1,59 @@
 import './style.css';
 import type { GameModule } from './types';
 import { renderMenu } from './menu';
+import { markSolved, renderDaily, today } from './daily';
 import { initNative } from './native';
 import { ballsort } from './games/ballsort';
 import { lightsout } from './games/lightsout';
 import { fifteen } from './games/fifteen';
-import { sudoku } from './games/sudoku';
+import { sudoku, sudoku6 } from './games/sudoku';
 import { binairo } from './games/binairo';
 import { queens } from './games/queens';
 import { minesweeper } from './games/minesweeper';
+import { tango } from './games/tango';
+import { skyscrapers } from './games/skyscrapers';
 
-const GAMES: GameModule[] = [ballsort, sudoku, queens, minesweeper, binairo, lightsout, fifteen];
+const GAMES: GameModule[] = [
+  ballsort, sudoku, sudoku6, queens, tango, skyscrapers, minesweeper, binairo, lightsout, fifteen,
+];
 
 const root = document.getElementById('root')!;
 let cleanup: (() => void) | null = null;
 
-const currentId = () => location.hash.replace(/^#\/?/, '');
+// Routes: #/ menu, #/<game>, #/daily list, #/daily/<game> today's board.
+const currentRoute = () => location.hash.replace(/^#\/?/, '');
+const go = (route: string) => { location.hash = `#/${route}`; };
 
 function route(): void {
   cleanup?.();
-  const game = GAMES.find((g) => g.id === currentId());
-  cleanup = game
-    ? game.mount(root, { back: goMenu })
-    : renderMenu(root, GAMES, (id) => { location.hash = `#/${id}`; });
-}
-
-function goMenu(): void {
-  location.hash = '#/';
+  const [head, sub] = currentRoute().split('/');
+  if (head === 'daily') {
+    const game = GAMES.find((g) => g.id === sub);
+    if (game) {
+      const day = today();
+      cleanup = game.mount(root, {
+        back: () => go('daily'),
+        daily: { level: game.dailyLevel, salt: day, solved: () => markSolved(game.id, day) },
+      });
+    } else {
+      cleanup = renderDaily(root, GAMES, (id) => go(`daily/${id}`), () => go(''));
+    }
+    return;
+  }
+  const game = GAMES.find((g) => g.id === head);
+  cleanup = game ? game.mount(root, { back: () => go('') }) : renderMenu(root, GAMES, go);
 }
 
 window.addEventListener('hashchange', route);
 
-// Android back: from a game return to the menu, from the menu leave the app.
-initNative({ onBack: () => { if (currentId()) { goMenu(); return true; } return false; } });
+// Android back: one level up (daily game -> daily list -> menu), from the menu leave the app.
+initNative({
+  onBack: () => {
+    const r = currentRoute();
+    if (!r) return false;
+    go(r.startsWith('daily/') ? 'daily' : '');
+    return true;
+  },
+});
 
 route();
