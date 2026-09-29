@@ -4,50 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#213f57">
-<title>Sortuj kulki</title>
+<title>Łamigłówki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="app">
-  <header>
-    <h1 id="title">Poziom 1</h1>
-    <div class="header-right">
-      <span class="moves" id="moves">Ruchy: 0</span>
-      <button class="icon-btn" id="btnMute" aria-pressed="false" aria-label="Wycisz dźwięk" title="Dźwięk">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="cross" d="m16 9 6 6"/><path class="cross" d="m22 9-6 6"/></svg>
-      </button>
-    </div>
-  </header>
-
-  <div class="board-wrap">
-    <div class="board" id="board" role="group" aria-label="Probówki"></div>
-  </div>
-
-  <div class="toolbar">
-    <button class="tool" id="btnRestart" aria-label="Zacznij poziom od nowa" title="Zacznij od nowa">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg>
-    </button>
-    <button class="tool" id="btnUndo" aria-label="Cofnij ruch" title="Cofnij ruch">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
-      <span class="badge" id="undoBadge">5</span>
-    </button>
-    <button class="tool" id="btnTube" aria-label="Dodaj pustą probówkę" title="Dodaj probówkę">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3h8"/><path d="M14 3v14a3 3 0 0 0 6 0V3"/><path d="M3 12h7"/><path d="M6.5 8.5v7"/></svg>
-      <span class="badge" id="tubeBadge">1</span>
-    </button>
-  </div>
-</div>
-
-<div class="overlay" id="winOverlay" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-  <div class="card">
-    <h2 id="winTitle">Brawo!</h2>
-    <p id="winText">Poziom ukończony</p>
-    <button class="primary" id="btnNext">Następny poziom</button>
-  </div>
-</div>
-
+<div id="root"></div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

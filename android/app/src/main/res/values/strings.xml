@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Sortuj kulki</string>
-    <string name="title_activity_main">Sortuj kulki</string>
+    <string name="app_name">Łamigłówki</string>
+    <string name="title_activity_main">Łamigłówki</string>
     <string name="package_name">cloud.dziedzic.ballsort</string>
     <string name="custom_url_scheme">cloud.dziedzic.ballsort</string>
 </resources>

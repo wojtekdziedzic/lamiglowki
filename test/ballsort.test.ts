@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CAP, COLORS, EMPTY_TUBES } from '../src/config';
-import { canMove, isSolved, isTubeDone } from '../src/rules';
-import { solve } from '../src/solver';
-import { colorsForLevel, generate } from '../src/generator';
+import { CAP, COLORS, EMPTY_TUBES } from '../src/games/ballsort/config';
+import { canMove, isSolved, isTubeDone } from '../src/games/ballsort/rules';
+import { solve } from '../src/games/ballsort/solver';
+import { colorsForLevel, generate } from '../src/games/ballsort/generator';
 
 describe('rules', () => {
   it('allows moves onto empty or matching tops only', () => {

@@ -1,4 +1,4 @@
-import { COLORS } from './config';
+import { COLORS } from './palette';
 
 export const reducedMotion = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;

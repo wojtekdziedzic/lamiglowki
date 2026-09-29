@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'cloud.dziedzic.ballsort',
-  appName: 'Sortuj kulki',
+  appName: 'Łamigłówki',
   webDir: 'dist',
   android: {
     backgroundColor: '#213f57',

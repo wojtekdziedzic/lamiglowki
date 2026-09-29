@@ -1,5 +1,5 @@
 import { CAP, COLORS, EMPTY_TUBES } from './config';
-import { mulberry32 } from './rng';
+import { mulberry32 } from '../../rng';
 import { isTubeDone, type State } from './rules';
 import { solve } from './solver';
 
