@@ -5,6 +5,7 @@ Ready-to-paste texts and form answers for Play Console. Keep in sync with the ap
 ## App details
 
 - App name (max 30): `Łamigłówki`
+- Package name: `cloud.dziedzic.lamiglowki` (permanent after first upload)
 - Default language: Polish (pl-PL); add English (en-US) translation
 - Category: Games > Puzzle
 - Tags: Logic, Sudoku, Brain games, Offline

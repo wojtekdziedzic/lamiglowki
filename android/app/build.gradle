@@ -6,10 +6,10 @@ def keystoreProps = new Properties()
 if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
 
 android {
-    namespace = "cloud.dziedzic.ballsort"
+    namespace = "cloud.dziedzic.lamiglowki"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "cloud.dziedzic.ballsort"
+        applicationId "cloud.dziedzic.lamiglowki"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 8

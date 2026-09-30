@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'cloud.dziedzic.ballsort',
+  appId: 'cloud.dziedzic.lamiglowki',
   appName: 'Łamigłówki',
   webDir: 'dist',
   android: {
