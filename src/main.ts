@@ -1,3 +1,10 @@
+// Bundled font (no network): Latin + Latin Extended covers Polish diacritics.
+import '@fontsource/baloo-2/latin-500.css';
+import '@fontsource/baloo-2/latin-ext-500.css';
+import '@fontsource/baloo-2/latin-700.css';
+import '@fontsource/baloo-2/latin-ext-700.css';
+import '@fontsource/baloo-2/latin-800.css';
+import '@fontsource/baloo-2/latin-ext-800.css';
 import './style.css';
 import type { GameModule } from './types';
 import { renderMenu } from './menu';
