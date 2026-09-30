@@ -1,7 +1,7 @@
 import type { GameContext, GameModule } from '../../types';
-import { CAP, COLORS } from './config';
+import { CAP, COLORS, EMPTY_TUBES } from './config';
 import { isSolved, isTubeDone, topRun, type State } from './rules';
-import { generate } from './generator';
+import { colorsForLevel, generate } from './generator';
 import { Game } from './game';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
@@ -158,6 +158,8 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
   }
 
   function startLevel(l: number): void {
+    // Size = tubes on the board at the start (colors plus the empty ones).
+    flow.setSize(`${colorsForLevel(l) + EMPTY_TUBES} probówek`);
     flow.enter(l, screen);
     game.start(l, flow.daily ? generate(l, flow.salt).tubes : levelLayout(l));
     cache.delete(l - 1);

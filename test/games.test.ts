@@ -221,6 +221,12 @@ describe('stats', () => {
     expect(st.formatTime(83_000)).toBe('1:23');
     expect(st.formatTime(3_723_000)).toBe('1:02:03');
   });
+
+  it('orders board sizes naturally with the legacy bucket last', () => {
+    const s = { solved: 1, bestMs: 1000, recent: [1000] };
+    const all = { '10×10': s, [st.LEGACY]: s, '6×6': s, '8×9': s, '8×8': s };
+    expect(st.sortedSizes(all)).toEqual(['6×6', '8×8', '8×9', '10×10', st.LEGACY]);
+  });
 });
 
 describe('daily seeds', () => {

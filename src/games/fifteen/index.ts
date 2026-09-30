@@ -3,8 +3,8 @@ import { COLORS } from '../../palette';
 import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
-import { generate, isSolved, slide, type Tiles } from './logic';
+import { ICONS, gameScreen, levelFlow, observeSize, squareSize } from '../../ui';
+import { generate, isSolved, sizeForLevel, slide, type Tiles } from './logic';
 
 const ID = 'fifteen';
 const INFO = {
@@ -40,6 +40,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
+    flow.setSize(squareSize(sizeForLevel(l)));
     flow.enter(l, screen);
     const lv = generate(l, flow.salt);
     n = lv.n;

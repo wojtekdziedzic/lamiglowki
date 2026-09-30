@@ -1,7 +1,7 @@
 import type { GameContext, GameModule } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize, squareSize } from '../../ui';
 import { N, errors, generate, isComplete, type Edge, type Grid } from './logic';
 
 const ID = 'tango';
@@ -65,6 +65,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
+    flow.setSize(squareSize(N));
     flow.enter(l, screen);
     const lv = generate(l, flow.salt);
     puzzle = lv.puzzle;

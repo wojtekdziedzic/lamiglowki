@@ -3,6 +3,7 @@
 | Data | Zakres | Szacunek |
 |---|---|---|
 | 2026-09-29 | Prototyp w artefakcie (logika, generator, animacje, poprawka resetu i układu planszy) | ~1 h |
+| 2026-09-30 | v1.3.1: rekordy osobno dla każdego rozmiaru planszy, migracja starych wyników do "wcześniej" | ~0,5 h |
 | 2026-09-30 | v1.3.0: statystyki czasu (zegar z pauzą w tle, rekord, średnia z 10, ekran Statystyki), odświeżone wszystkie zrzuty na stronie | ~1 h |
 | 2026-09-29 | v1.2.1: nazwa gry w nagłówku + poziom w podtytule, przycisk "i" z instrukcją każdej gry (auto przy pierwszym wejściu) | ~0,5 h |
 | 2026-09-29 | v1.2.0: Namioty (solver z dopasowaniem drzewo-namiot, jedno rozwiązanie), strona | ~0,75 h |

@@ -2,8 +2,8 @@ import type { GameModule } from '../../types';
 import type { GameContext } from '../../types';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
-import { generate, isSolved, press, type Board } from './logic';
+import { ICONS, gameScreen, levelFlow, observeSize, squareSize } from '../../ui';
+import { generate, isSolved, press, sizeForLevel, type Board } from './logic';
 
 const ID = 'lightsout';
 const INFO = {
@@ -39,6 +39,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
+    flow.setSize(squareSize(sizeForLevel(l)));
     flow.enter(l, screen);
     const lv = generate(l, flow.salt);
     n = lv.n;

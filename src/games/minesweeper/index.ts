@@ -48,6 +48,8 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
+    const size = configForLevel(l);
+    flow.setSize(`${size.cols}×${size.rows}`);
     flow.enter(l, screen);
     cfg = configForLevel(l);
     const N = cfg.rows * cfg.cols;

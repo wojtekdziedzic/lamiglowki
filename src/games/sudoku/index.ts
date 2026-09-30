@@ -2,7 +2,7 @@ import type { GameContext, GameModule } from '../../types';
 import { clearKey, loadJSON, saveJSON } from '../../storage';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
-import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
+import { ICONS, gameScreen, levelFlow, observeSize, squareSize } from '../../ui';
 import { SPEC6, SPEC9, conflicts, difficultyLabel, generate, geometry, type Grid, type Spec } from './logic';
 
 interface Saved { level: number; values: Grid; notes: number[]; elapsed?: number }
@@ -110,6 +110,7 @@ function createMount(id: string, spec: Spec, label: string) {
         notes = new Array(N).fill(0);
       }
       // A resumed game keeps the time already spent on it.
+      flow.setSize(squareSize(n));
       flow.enter(l, screen, resumed ? saved!.elapsed ?? 0 : 0);
       selected = -1;
       history = [];

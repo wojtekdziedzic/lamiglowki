@@ -255,13 +255,20 @@ export interface LevelFlow {
   label(level: number): string;
   /** Call when a level starts; restarts the clock (from `fromMs` for a restored game). */
   enter(level: number, screen: Screen, fromMs?: number): void;
+  /** Board size label for the stats ("8×8", "12 probówek"); records compare only within one size. */
+  setSize(label: string): void;
   /** Call the moment the board is solved; shows the card after a short delay. */
   won(screen: Screen, level: number, text: string, next: (level: number) => void, delayMs?: number): void;
 }
 
+/** Stats size label for square boards. */
+export const squareSize = (n: number): string => `${n}×${n}`;
+
 export function levelFlow(id: string, ctx: GameContext): LevelFlow {
   const daily = ctx.daily;
+  let size = '';
   return {
+    setSize(label) { size = label; },
     daily: !!daily,
     initial: daily ? daily.level : loadLevel(id),
     salt: daily ? daily.salt : 0,
@@ -273,8 +280,8 @@ export function levelFlow(id: string, ctx: GameContext): LevelFlow {
     won(screen, level, text, next, delayMs = 300) {
       // Persist right away so leaving before tapping "next" keeps the progress.
       const ms = screen.clock.stop();
-      const { record } = recordSolve(id, ms);
-      const time = `Czas ${formatTime(ms)}${record ? ', nowy rekord!' : ''}`;
+      const { record } = recordSolve(id, size, ms);
+      const time = `Czas ${formatTime(ms)}${record ? `, nowy rekord dla ${size}!` : ''}`;
       if (daily) daily.solved();
       else saveLevel(id, level + 1);
       setTimeout(() => {
