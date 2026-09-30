@@ -1,4 +1,4 @@
-package cloud.dziedzic.ballsort;
+package cloud.dziedzic.lamiglowki;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -6,14 +6,14 @@ def keystoreProps = new Properties()
 if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
 
 android {
-    namespace = "cloud.dziedzic.ballsort"
+    namespace = "cloud.dziedzic.lamiglowki"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "cloud.dziedzic.ballsort"
+        applicationId "cloud.dziedzic.lamiglowki"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "1.3.1"
+        versionCode 8
+        versionName "1.3.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
