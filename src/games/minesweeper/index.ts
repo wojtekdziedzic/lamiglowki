@@ -48,7 +48,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    flow.enter(l);
+    flow.enter(l, screen);
     cfg = configForLevel(l);
     const N = cfg.rows * cfg.cols;
     mines = null;
@@ -131,6 +131,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
   function lose(i: number): void {
     over = true;
     exploded = i;
+    screen.clock.stop(); // a lost board does not count as a solve
     mines!.forEach((m, j) => { if (m && !flagged[j]) revealed[j] = true; });
     render();
     setTimeout(() => showWin(screen, {

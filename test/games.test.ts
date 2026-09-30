@@ -8,6 +8,7 @@ import * as ms from '../src/games/minesweeper/logic';
 import * as tg from '../src/games/tango/logic';
 import * as sk from '../src/games/skyscrapers/logic';
 import * as te from '../src/games/tents/logic';
+import * as st from '../src/stats';
 
 describe('lights out', () => {
   it('is deterministic, never pre-solved, and solved by its own presses', () => {
@@ -211,6 +212,14 @@ describe('tents', () => {
     const avg = (performance.now() - t0) / 5;
     console.log(`tents 9x9 avg ${avg.toFixed(0)} ms`);
     expect(avg).toBeLessThan(400);
+  });
+});
+
+describe('stats', () => {
+  it('formats solve times', () => {
+    expect(st.formatTime(0)).toBe('0:00');
+    expect(st.formatTime(83_000)).toBe('1:23');
+    expect(st.formatTime(3_723_000)).toBe('1:02:03');
   });
 });
 

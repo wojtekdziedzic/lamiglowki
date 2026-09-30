@@ -158,7 +158,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
   }
 
   function startLevel(l: number): void {
-    flow.enter(l);
+    flow.enter(l, screen);
     game.start(l, flow.daily ? generate(l, flow.salt).tubes : levelLayout(l));
     cache.delete(l - 1);
     selected = -1;

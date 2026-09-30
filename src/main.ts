@@ -2,6 +2,7 @@ import './style.css';
 import type { GameModule } from './types';
 import { renderMenu } from './menu';
 import { markSolved, renderDaily, today } from './daily';
+import { renderStats } from './stats-screen';
 import { initNative } from './native';
 import { ballsort } from './games/ballsort';
 import { lightsout } from './games/lightsout';
@@ -39,6 +40,10 @@ function route(): void {
     } else {
       cleanup = renderDaily(root, GAMES, (id) => go(`daily/${id}`), () => go(''));
     }
+    return;
+  }
+  if (head === 'stats') {
+    cleanup = renderStats(root, GAMES, () => go(''));
     return;
   }
   const game = GAMES.find((g) => g.id === head);

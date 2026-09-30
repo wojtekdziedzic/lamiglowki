@@ -405,6 +405,19 @@ header:has([data-info]) { gap: 8px; }
 :root[data-theme="dark"] .menu-card.daily-card { background: linear-gradient(135deg, #3a3413, var(--btn) 70%); }
 .menu-level.done { background: color-mix(in srgb, var(--done) 30%, transparent); }
 .daily-note { margin: 0 0 14px; color: var(--muted); font-size: 0.95rem; }
+.header-actions { display: flex; gap: 8px; }
+.stats-card { cursor: default; }
+.stats-card:active { transform: none; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12); }
+.stats-best {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.stats-best small { font-size: 0.72rem; font-weight: 600; color: var(--muted); }
 
 /* ---------- lights out ---------- */
 .lo-grid {

@@ -40,7 +40,7 @@ function mount(root: HTMLElement, ctx: GameContext): () => void {
 
   function startLevel(l: number): void {
     level = l;
-    flow.enter(l);
+    flow.enter(l, screen);
     const lv = generate(l, flow.salt);
     n = lv.n;
     start = lv.tiles;

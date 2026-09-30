@@ -2,14 +2,21 @@ import type { GameModule } from './types';
 import { loadLevel } from './storage';
 import { muteButton } from './ui';
 import { DAILY_ICON, solvedToday, streak, streakLabel } from './daily';
+import { STATS_ICON } from './stats-screen';
 
 export function renderMenu(root: HTMLElement, games: GameModule[], open: (route: string) => void): () => void {
   root.innerHTML = `
     <div class="app menu">
-      <header><h1>Łamigłówki</h1></header>
+      <header>
+        <h1>Łamigłówki</h1>
+        <div class="header-actions">
+          <button class="icon-btn" data-stats aria-label="Statystyki" title="Statystyki">${STATS_ICON}</button>
+        </div>
+      </header>
       <ul class="menu-grid" role="list"></ul>
     </div>`;
-  root.querySelector('header')!.appendChild(muteButton());
+  root.querySelector('.header-actions')!.appendChild(muteButton());
+  root.querySelector('[data-stats]')!.addEventListener('click', () => open('stats'));
   const list = root.querySelector('.menu-grid')!;
 
   const card = (icon: string, title: string, tag: string, badge: string, route: string, extra = '') => {

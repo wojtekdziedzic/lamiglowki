@@ -2,6 +2,7 @@ import { isMuted, setMuted, sfx } from './audio';
 import { confetti } from './fx';
 import { haptic } from './haptics';
 import { loadJSON, loadLevel, saveJSON, saveLevel } from './storage';
+import { formatTime, recordSolve } from './stats';
 import type { GameContext } from './types';
 
 const svg = (body: string, width = 2.4) =>
@@ -48,12 +49,22 @@ export interface Screen {
   setLevel(t: string): void;
   /** Rest of the subtitle: moves, board size, counters. */
   setStatus(t: string): void;
+  /** Solve timer shown at the end of the subtitle; pauses while the app is hidden. */
+  clock: Clock;
   tool(opts: ToolOpts): Tool;
   /** Registers the open win card so leaving the game also closes it. */
   setWinCloser(fn: (() => void) | null): void;
   /** False once the player has left the game. */
   readonly alive: boolean;
   destroy(): void;
+}
+
+export interface Clock {
+  /** Start counting from `fromMs` (a restored game keeps its time). */
+  reset(fromMs?: number): void;
+  /** Freeze and return the total time. */
+  stop(): number;
+  elapsed(): number;
 }
 
 export function muteButton(): HTMLButtonElement {
@@ -116,7 +127,26 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
   let alive = true;
   let levelText = '';
   let statusText = '';
-  const syncSubtitle = () => { status.textContent = [levelText, statusText].filter(Boolean).join(' · '); };
+  let clockText = '';
+  const syncSubtitle = () => { status.textContent = [levelText, statusText, clockText].filter(Boolean).join(' · '); };
+
+  // Only foreground time counts: a phone put down mid-puzzle does not inflate the result.
+  let acc = 0, since = 0, running = false;
+  const now = () => performance.now();
+  const elapsed = () => acc + (running && !document.hidden ? now() - since : 0);
+  const showClock = () => { clockText = running || acc ? formatTime(elapsed()) : ''; syncSubtitle(); };
+  const onVisibility = () => {
+    if (!running) return;
+    if (document.hidden) acc += now() - since;
+    else since = now();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  const ticker = setInterval(() => { if (running) showClock(); }, 1000);
+  const clock: Clock = {
+    reset(fromMs = 0) { acc = fromMs; since = now(); running = true; showClock(); },
+    stop() { acc = elapsed(); running = false; showClock(); return acc; },
+    elapsed,
+  };
 
   const openRules = () => {
     if (closeRules) return;
@@ -135,6 +165,7 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
     toolbar,
     setLevel: (t) => { levelText = t; syncSubtitle(); },
     setStatus: (t) => { statusText = t; syncSubtitle(); },
+    clock,
     tool({ icon, label, onClick, badge }) {
       const el = document.createElement('button');
       el.className = 'tool';
@@ -160,6 +191,8 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
     get alive() { return alive; },
     destroy() {
       alive = false;
+      clearInterval(ticker);
+      document.removeEventListener('visibilitychange', onVisibility);
       closeWin?.();
       closeRules?.();
       root.textContent = '';
@@ -220,8 +253,8 @@ export interface LevelFlow {
   salt: number;
   /** Subtitle lead: "Poziom 12", or "Zagadka dnia" for the daily board. */
   label(level: number): string;
-  /** Call when a level starts. */
-  enter(level: number): void;
+  /** Call when a level starts; restarts the clock (from `fromMs` for a restored game). */
+  enter(level: number, screen: Screen, fromMs?: number): void;
   /** Call the moment the board is solved; shows the card after a short delay. */
   won(screen: Screen, level: number, text: string, next: (level: number) => void, delayMs?: number): void;
 }
@@ -233,14 +266,20 @@ export function levelFlow(id: string, ctx: GameContext): LevelFlow {
     initial: daily ? daily.level : loadLevel(id),
     salt: daily ? daily.salt : 0,
     label: (level) => (daily ? 'Zagadka dnia' : `Poziom ${level}`),
-    enter(level) { if (!daily) saveLevel(id, level); },
+    enter(level, screen, fromMs = 0) {
+      if (!daily) saveLevel(id, level);
+      screen.clock.reset(fromMs);
+    },
     won(screen, level, text, next, delayMs = 300) {
       // Persist right away so leaving before tapping "next" keeps the progress.
+      const ms = screen.clock.stop();
+      const { record } = recordSolve(id, ms);
+      const time = `Czas ${formatTime(ms)}${record ? ', nowy rekord!' : ''}`;
       if (daily) daily.solved();
       else saveLevel(id, level + 1);
       setTimeout(() => {
-        if (daily) showWin(screen, { text: 'Zagadka dnia rozwiązana', button: 'Wróć', onNext: ctx.back });
-        else showWin(screen, { text, onNext: () => next(level + 1) });
+        if (daily) showWin(screen, { text: `Zagadka dnia rozwiązana. ${time}`, button: 'Wróć', onNext: ctx.back });
+        else showWin(screen, { text: `${text}. ${time}`, onNext: () => next(level + 1) });
       }, delayMs);
     },
   };

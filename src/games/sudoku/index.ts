@@ -5,7 +5,7 @@ import { haptic } from '../../haptics';
 import { ICONS, gameScreen, levelFlow, observeSize } from '../../ui';
 import { SPEC6, SPEC9, conflicts, difficultyLabel, generate, geometry, type Grid, type Spec } from './logic';
 
-interface Saved { level: number; values: Grid; notes: number[] }
+interface Saved { level: number; values: Grid; notes: number[]; elapsed?: number }
 interface Change { i: number; v: number; notes: number }
 
 function createMount(id: string, spec: Spec, label: string) {
@@ -97,18 +97,20 @@ function createMount(id: string, spec: Spec, label: string) {
 
     function startLevel(l: number, restore: boolean): void {
       level = l;
-      flow.enter(l);
       const lv = generate(l, spec, flow.salt);
       givens = lv.puzzle.map((v) => v !== 0);
       clues = lv.clues;
       const saved = restore && !flow.daily ? loadJSON<Saved>(STATE_KEY) : null;
-      if (saved && saved.level === l && saved.values?.length === N) {
-        values = saved.values;
-        notes = saved.notes;
+      const resumed = !!saved && saved.level === l && saved.values?.length === N;
+      if (resumed) {
+        values = saved!.values;
+        notes = saved!.notes;
       } else {
         values = lv.puzzle.slice();
         notes = new Array(N).fill(0);
       }
+      // A resumed game keeps the time already spent on it.
+      flow.enter(l, screen, resumed ? saved!.elapsed ?? 0 : 0);
       selected = -1;
       history = [];
       won = false;
@@ -116,7 +118,9 @@ function createMount(id: string, spec: Spec, label: string) {
     }
 
     // Mid-game state is kept for regular levels only; the daily board is short enough.
-    const persist = () => { if (!flow.daily) saveJSON(STATE_KEY, { level, values, notes } satisfies Saved); };
+    const persist = () => {
+      if (!flow.daily) saveJSON(STATE_KEY, { level, values, notes, elapsed: screen.clock.elapsed() } satisfies Saved);
+    };
 
     function apply(changes: Change[]): void {
       const before = changes.map(({ i }) => ({ i, v: values[i], notes: notes[i] }));
@@ -244,6 +248,7 @@ function createMount(id: string, spec: Spec, label: string) {
     return () => {
       stop();
       window.removeEventListener('keydown', onKey);
+      if (!won) persist(); // keep the clock too, not just the digits
       screen.destroy();
     };
   };
