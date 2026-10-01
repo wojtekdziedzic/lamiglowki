@@ -9,6 +9,7 @@ Ready-to-paste texts and form answers for Play Console. Keep in sync with the ap
 - Default language: Polish (pl-PL); add English (en-US) translation
 - Category: Games > Puzzle
 - Tags: Logic, Sudoku, Brain games, Offline
+- Developer (legal name, D-U-N-S 439613574): WPD WEB Wojciech Dziedzic
 - Contact email: wojciech@dziedzic.cloud
 - Website: https://dziedzic.cloud/lamiglowki
 - Privacy policy URL: https://dziedzic.cloud/lamiglowki/prywatnosc (see `privacy-policy.html`)
