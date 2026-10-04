@@ -3,6 +3,7 @@
 | Data | Zakres | Szacunek |
 |---|---|---|
 | 2026-09-29 | Prototyp w artefakcie (logika, generator, animacje, poprawka resetu i układu planszy) | ~1 h |
+| 2026-10-04 | v1.4.1: zegar w stałym polu (nagłówek nie skacze), podtytuł zawsze w jednej linii | ~0,5 h |
 | 2026-10-04 | v1.4.0: Sudoku: research funkcji w innych aplikacjach, widoczny tryb notatek, automatyczne notatki, wskazówka z wyjaśnieniem, podpisy pod przyciskami | ~1,5 h |
 | 2026-09-30 | v1.3.1: rekordy osobno dla każdego rozmiaru planszy, migracja starych wyników do "wcześniej" | ~0,5 h |
 | 2026-09-30 | v1.3.0: statystyki czasu (zegar z pauzą w tle, rekord, średnia z 10, ekran Statystyki), odświeżone wszystkie zrzuty na stronie | ~1 h |

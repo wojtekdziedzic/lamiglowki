@@ -114,7 +114,7 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
     <div class="app">
       <header>
         <button class="icon-btn" data-back aria-label="Wróć do menu" title="Menu">${ICONS.back}</button>
-        <div class="titles"><h1></h1><span class="moves"></span></div>
+        <div class="titles"><h1></h1><span class="moves game-sub"><span class="sub-text"></span><span class="sub-clock"></span></span></div>
         <button class="icon-btn" data-info aria-label="Jak grać" title="Jak grać">${ICONS.info}</button>
       </header>
       <div class="board-wrap"></div>
@@ -124,7 +124,8 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
   header.appendChild(muteButton());
   root.querySelector('[data-back]')!.addEventListener('click', onBack);
   root.querySelector('h1')!.textContent = info.title;
-  const status = root.querySelector<HTMLElement>('.moves')!;
+  const status = root.querySelector<HTMLElement>('.sub-text')!;
+  const clockEl = root.querySelector<HTMLElement>('.sub-clock')!;
   const toolbar = root.querySelector<HTMLElement>('.toolbar')!;
   let closeWin: (() => void) | null = null;
   let closeRules: (() => void) | null = null;
@@ -132,7 +133,13 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
   let levelText = '';
   let statusText = '';
   let clockText = '';
-  const syncSubtitle = () => { status.textContent = [levelText, statusText, clockText].filter(Boolean).join(' · '); };
+  // The clock lives in its own fixed-width slot: a ticking digit must never change the
+  // subtitle's width, or the line would wrap and the whole board would jump.
+  const syncSubtitle = () => {
+    status.textContent = [levelText, statusText].filter(Boolean).join(' · ');
+    clockEl.textContent = clockText;
+    clockEl.style.minWidth = clockText ? `${clockText.length}ch` : '';
+  };
 
   // Only foreground time counts: a phone put down mid-puzzle does not inflate the result.
   let acc = 0, since = 0, running = false;

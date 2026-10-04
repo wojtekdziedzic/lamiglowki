@@ -263,7 +263,8 @@ function createMount(id: string, spec: Spec, label: string) {
       modeLine.classList.toggle('pencil', !hintText && pencil);
       undoTool.setDisabled(!history.length);
       screen.setLevel(flow.label(level));
-      screen.setStatus(`${difficultyLabel(clues, spec)} · puste: ${values.filter((v) => !v).length}`);
+      // Empties first: on narrow phones the subtitle truncates from the end.
+      screen.setStatus(`puste: ${values.filter((v) => !v).length} · ${difficultyLabel(clues, spec)}`);
     }
 
     grid.addEventListener('click', (e) => {

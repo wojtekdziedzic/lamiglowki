@@ -104,6 +104,14 @@ h1 {
 header:has([data-info]) { gap: 8px; }
 .titles { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .moves { color: var(--muted); font-size: 0.95rem; font-weight: 500; line-height: 1.2; }
+/* Game subtitle: always one line. The text part truncates, the clock keeps its full width. */
+.game-sub { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; font-size: clamp(0.8rem, 3.6vw, 0.95rem); }
+.sub-text { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* min-width (set in ch from the text length) reserves room for the widest digits;
+   the separator sits in the padding so it does not eat into that room. */
+.sub-clock { flex: none; position: relative; text-align: right; font-variant-numeric: tabular-nums; }
+.sub-clock:not(:empty) { padding-left: 0.75em; }
+.sub-clock:not(:empty)::before { content: "·"; position: absolute; left: 0.25em; }
 .icon-btn {
   width: 44px;
   height: 44px;
