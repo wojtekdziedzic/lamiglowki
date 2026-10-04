@@ -553,7 +553,34 @@ header:has([data-info]) { gap: 8px; }
   color: var(--muted);
 }
 .sd-key.used { opacity: 0.35; }
-.sd-pad.pencil .sd-key { color: var(--accent); }
+.sd-pad.pencil .sd-key { color: var(--accent); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.14), inset 0 0 0 2px var(--accent); }
+.sd-pad.pencil .sd-key span { font-size: 0.72em; }
+/* Fixed two-line slot so the keypad never jumps when a message appears */
+.sd-mode {
+  margin: 0;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+.sd-mode.pencil { color: var(--accent); font-weight: 700; }
+.sd-mode.hint { color: var(--text); font-weight: 600; }
+.sd-cell.hint { box-shadow: inset 0 0 0 3px var(--done); background: color-mix(in srgb, var(--done) 22%, transparent); }
+
+/* Toolbar with captions: smaller buttons, text under the icon */
+.toolbar.captioned { gap: 6px; }
+.toolbar.captioned .tool {
+  width: 52px;
+  height: 58px;
+  border-radius: 14px;
+  grid-template-rows: 1fr auto;
+  padding: 6px 0 5px;
+}
+.toolbar.captioned .tool svg { width: 24px; height: 24px; }
+.tool-cap { font-size: 0.6rem; font-weight: 700; line-height: 1; white-space: nowrap; }
 .sd-key:active { transform: translateY(2px); box-shadow: none; }
 .sd-key:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 

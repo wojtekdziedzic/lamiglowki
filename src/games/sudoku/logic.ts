@@ -139,6 +139,50 @@ export function generate(l: number, spec: Spec = SPEC9, salt = 0): SudokuLevel {
   return { puzzle, solution, clues };
 }
 
+/** Bitmask of digits that do not yet appear among the cell's peers. */
+export function candidates(g: Grid, i: number, spec: Spec = SPEC9): number {
+  const { n, peers } = geometry(spec);
+  let mask = (1 << (n + 1)) - 2;
+  for (const j of peers[i]) if (g[j]) mask &= ~(1 << g[j]);
+  return mask;
+}
+
+export type Hint =
+  | { kind: 'wrong'; cell: number }
+  /** Only one digit fits this cell. */
+  | { kind: 'single'; cell: number; digit: number }
+  /** The digit fits nowhere else in this row, column or box. */
+  | { kind: 'hidden'; cell: number; digit: number; unit: 'row' | 'col' | 'box' }
+  /** No easy step left: reveal one cell from the solution. */
+  | { kind: 'reveal'; cell: number; digit: number };
+
+/** The gentlest next step: fix a mistake, then a single, then a hidden single, else reveal. */
+export function findHint(g: Grid, solution: Grid, spec: Spec = SPEC9): Hint | null {
+  const geo = geometry(spec);
+  const { n, cells, row, col, box } = geo;
+  const wrong = g.findIndex((v, i) => v !== 0 && v !== solution[i]);
+  if (wrong >= 0) return { kind: 'wrong', cell: wrong };
+
+  const cand = g.map((v, i) => (v ? 0 : candidates(g, i, spec)));
+  for (let i = 0; i < cells; i++) {
+    if (g[i]) continue;
+    const m = cand[i];
+    if (m && (m & (m - 1)) === 0) return { kind: 'single', cell: i, digit: Math.log2(m) };
+  }
+  const units: ['row' | 'col' | 'box', (i: number) => number][] = [['row', row], ['col', col], ['box', box]];
+  for (const [unit, of] of units) {
+    for (let u = 0; u < n; u++) {
+      for (let d = 1; d <= n; d++) {
+        const spots: number[] = [];
+        for (let i = 0; i < cells; i++) if (!g[i] && of(i) === u && cand[i] & (1 << d)) spots.push(i);
+        if (spots.length === 1) return { kind: 'hidden', cell: spots[0], digit: d, unit };
+      }
+    }
+  }
+  const empty = g.findIndex((v) => !v);
+  return empty >= 0 ? { kind: 'reveal', cell: empty, digit: solution[empty] } : null;
+}
+
 /** Cells whose value repeats in a row, column or box. */
 export function conflicts(g: Grid, spec: Spec = SPEC9): Set<number> {
   const { peers } = geometry(spec);

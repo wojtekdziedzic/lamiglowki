@@ -15,6 +15,8 @@ export const ICONS = {
   tube: svg('<path d="M13 3h8"/><path d="M14 3v14a3 3 0 0 0 6 0V3"/><path d="M3 12h7"/><path d="M6.5 8.5v7"/>'),
   pencil: svg('<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><path d="m15 5 4 4"/>'),
   flag: svg('<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'),
+  autoNotes: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 8v.1M12 8v.1M16 8v.1M8 12v.1M12 12v.1M16 12v.1M8 16v.1M12 16v.1M16 16v.1"/>', 2.2),
+  hint: svg('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>', 2.2),
   erase: svg('<path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 19"/><path d="M22 21H7"/><path d="m5 11 9 9"/>'),
   sound: svg('<path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="cross" d="m16 9 6 6"/><path class="cross" d="m22 9-6 6"/>', 2.2),
   info: svg('<circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><path d="M12 7.2v.1"/>', 2.4),
@@ -33,6 +35,8 @@ export interface ToolOpts {
   label: string;
   onClick: () => void;
   badge?: boolean;
+  /** Short visible text under the icon; a toolbar with captions uses smaller buttons. */
+  caption?: string;
 }
 
 export interface Tool {
@@ -166,12 +170,19 @@ export function gameScreen(root: HTMLElement, onBack: () => void, info: GameInfo
     setLevel: (t) => { levelText = t; syncSubtitle(); },
     setStatus: (t) => { statusText = t; syncSubtitle(); },
     clock,
-    tool({ icon, label, onClick, badge }) {
+    tool({ icon, label, onClick, badge, caption }) {
       const el = document.createElement('button');
       el.className = 'tool';
       el.setAttribute('aria-label', label);
       el.title = label;
       el.innerHTML = icon;
+      if (caption) {
+        const cap = document.createElement('span');
+        cap.className = 'tool-cap';
+        cap.textContent = caption;
+        el.appendChild(cap);
+        toolbar.classList.add('captioned');
+      }
       let badgeEl: HTMLSpanElement | null = null;
       if (badge) {
         badgeEl = document.createElement('span');

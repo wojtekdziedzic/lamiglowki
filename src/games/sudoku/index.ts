@@ -3,7 +3,7 @@ import { clearKey, loadJSON, saveJSON } from '../../storage';
 import { sfx } from '../../audio';
 import { haptic } from '../../haptics';
 import { ICONS, gameScreen, levelFlow, observeSize, squareSize } from '../../ui';
-import { SPEC6, SPEC9, conflicts, difficultyLabel, generate, geometry, type Grid, type Spec } from './logic';
+import { SPEC6, SPEC9, candidates, conflicts, difficultyLabel, findHint, generate, geometry, type Grid, type Spec } from './logic';
 
 interface Saved { level: number; values: Grid; notes: number[]; elapsed?: number }
 interface Change { i: number; v: number; notes: number }
@@ -18,7 +18,8 @@ function createMount(id: string, spec: Spec, label: string) {
     rules: [
       `Wpisz cyfry od 1 do ${n}: w każdym wierszu, kolumnie i bloku ${spec.br}x${spec.bc} każda cyfra występuje dokładnie raz.`,
       'Stuknij pole, potem cyfrę na klawiaturze. Małe liczby na klawiszach mówią, ile danej cyfry jeszcze brakuje.',
-      'Ołówek włącza notatki, czyli małe cyfry kandydatów. Wpisana cyfra sama znika z notatek sąsiadów.',
+      'Notatki: włącz ołówek, a cyfry będą się wpisywać jako małe "możliwe opcje". Wpisana cyfra sama znika z notatek sąsiadów.',
+      'Auto wypełnia notatki we wszystkich pustych polach. Wskazówka pokazuje następny krok i tłumaczy, dlaczego.',
       'Powtórzone cyfry podświetlają się na czerwono. Gumka czyści pole, cofanie działa bez limitu.',
       'Gra zapisuje się w trakcie, możesz wyjść i wrócić.',
     ],
@@ -36,18 +37,25 @@ function createMount(id: string, spec: Spec, label: string) {
     grid.setAttribute('aria-label', label);
     const pad = document.createElement('div');
     pad.className = 'sd-pad';
-    area.append(grid, pad);
+    // One line that says what the keypad does right now, or explains the last hint.
+    const modeLine = document.createElement('p');
+    modeLine.className = 'sd-mode';
+    modeLine.setAttribute('aria-live', 'polite');
+    area.append(grid, modeLine, pad);
     screen.wrap.appendChild(area);
 
     let level = 1;
     let givens: boolean[] = [];
     let values: Grid = [];
+    let solution: Grid = [];
     let notes: number[] = [];
     let clues = 0;
     let selected = -1;
     let pencil = false;
     let won = false;
     let history: Change[][] = [];
+    let hintCell = -1;
+    let hintText = '';
 
     // Box edges get a thick line; the outer border is drawn by the grid itself.
     const edgeClasses = (i: number) => {
@@ -77,29 +85,68 @@ function createMount(id: string, spec: Spec, label: string) {
       padBtns.push(b);
     }
 
-    const undoTool = screen.tool({ icon: ICONS.undo, label: 'Cofnij', onClick: () => undo() });
+    const undoTool = screen.tool({ icon: ICONS.undo, label: 'Cofnij', caption: 'Cofnij', onClick: () => undo() });
     const pencilTool = screen.tool({
-      icon: ICONS.pencil, label: 'Notatki',
-      onClick: () => { pencil = !pencil; render(); },
+      icon: ICONS.pencil, label: 'Notatki', caption: 'Notatki',
+      onClick: () => { pencil = !pencil; clearHint(); render(); },
     });
-    screen.tool({ icon: ICONS.erase, label: 'Wyczyść pole', onClick: () => erase() });
+    screen.tool({ icon: ICONS.autoNotes, label: 'Wypełnij notatki automatycznie', caption: 'Auto', onClick: () => autoNotes() });
+    screen.tool({ icon: ICONS.erase, label: 'Wyczyść pole', caption: 'Gumka', onClick: () => erase() });
+    screen.tool({ icon: ICONS.hint, label: 'Wskazówka', caption: 'Wskazówka', onClick: () => hint() });
     screen.tool({
-      icon: ICONS.restart, label: 'Zacznij od nowa',
+      icon: ICONS.restart, label: 'Zacznij od nowa', caption: 'Od nowa',
       onClick: () => {
         values = values.map((v, i) => (givens[i] ? v : 0));
         notes = new Array(N).fill(0);
         history = [];
         won = false;
+        clearHint();
         persist();
         render();
       },
     });
 
+    const clearHint = () => { hintCell = -1; hintText = ''; };
+
+    /** Writes every still-possible digit into each empty cell; one undo step. */
+    function autoNotes(): void {
+      if (won) return;
+      const changes: Change[] = [];
+      for (let i = 0; i < N; i++) {
+        if (values[i]) continue;
+        const mask = candidates(values, i, spec);
+        if (mask !== notes[i]) changes.push({ i, v: 0, notes: mask });
+      }
+      if (!changes.length) return;
+      apply(changes);
+      clearHint();
+      sfx.pick();
+      render();
+    }
+
+    const UNIT = { row: 'w tym wierszu', col: 'w tej kolumnie', box: 'w tym bloku' };
+    /** Points at the next step and says why; never fills the cell for the player. */
+    function hint(): void {
+      if (won) return;
+      const h = findHint(values, solution, spec);
+      if (!h) return;
+      hintCell = selected = h.cell;
+      hintText = h.kind === 'wrong' ? 'W zaznaczonym polu jest błąd. Usuń tę cyfrę.'
+        : h.kind === 'single' ? `Tu pasuje tylko ${h.digit}: pozostałe cyfry są już w wierszu, kolumnie lub bloku.`
+        : h.kind === 'hidden' ? `Cyfra ${h.digit} ${UNIT[h.unit]} mieści się tylko tutaj.`
+        : `Tu potrzeba trudniejszej techniki. W zaznaczonym polu jest ${h.digit}.`;
+      sfx.pick();
+      haptic.tap();
+      render();
+    }
+
     function startLevel(l: number, restore: boolean): void {
       level = l;
       const lv = generate(l, spec, flow.salt);
       givens = lv.puzzle.map((v) => v !== 0);
+      solution = lv.solution;
       clues = lv.clues;
+      clearHint();
       const saved = restore && !flow.daily ? loadJSON<Saved>(STATE_KEY) : null;
       const resumed = !!saved && saved.level === l && saved.values?.length === N;
       if (resumed) {
@@ -133,6 +180,7 @@ function createMount(id: string, spec: Spec, label: string) {
     function enter(v: number): void {
       if (selected < 0 || givens[selected] || won || v > n) return;
       const i = selected;
+      clearHint();
       if (pencil) {
         if (values[i]) return;
         apply([{ i, v: 0, notes: notes[i] ^ (1 << v) }]);
@@ -156,6 +204,7 @@ function createMount(id: string, spec: Spec, label: string) {
     function erase(): void {
       if (selected < 0 || givens[selected] || won) return;
       if (!values[selected] && !notes[selected]) return;
+      clearHint();
       apply([{ i: selected, v: 0, notes: 0 }]);
       sfx.pick();
       render();
@@ -189,6 +238,7 @@ function createMount(id: string, spec: Spec, label: string) {
         else if (selected >= 0 && (row(i) === row(selected) || col(i) === col(selected) || box(i) === box(selected))) cls.push('peer');
         if (selVal && v === selVal && i !== selected) cls.push('same');
         if (bad.has(i)) cls.push('bad');
+        if (i === hintCell) cls.push('hint');
         el.className = cls.join(' ');
         if (v) {
           el.textContent = String(v);
@@ -208,6 +258,9 @@ function createMount(id: string, spec: Spec, label: string) {
       });
       pencilTool.setPressed(pencil);
       pad.classList.toggle('pencil', pencil);
+      modeLine.textContent = hintText || (pencil ? 'Tryb notatek: cyfry wpisują się jako małe możliwe opcje' : '');
+      modeLine.classList.toggle('hint', !!hintText);
+      modeLine.classList.toggle('pencil', !hintText && pencil);
       undoTool.setDisabled(!history.length);
       screen.setLevel(flow.label(level));
       screen.setStatus(`${difficultyLabel(clues, spec)} · puste: ${values.filter((v) => !v).length}`);
@@ -217,6 +270,7 @@ function createMount(id: string, spec: Spec, label: string) {
       const el = (e.target as HTMLElement).closest<HTMLElement>('.sd-cell');
       if (!el) return;
       selected = Number(el.dataset.i);
+      if (selected !== hintCell) clearHint();
       render();
     });
     pad.addEventListener('click', (e) => {
@@ -238,8 +292,8 @@ function createMount(id: string, spec: Spec, label: string) {
     window.addEventListener('keydown', onKey);
 
     const stop = observeSize(screen.wrap, (w, h) => {
-      // The grid plus one pad row (about 1.3 cells high) must fit.
-      const side = Math.floor(Math.max(180, Math.min(w, (h - 12) / (1 + 1.3 / n), 520)));
+      // The grid, the mode line (two text lines) and one pad row (about 1.3 cells high) must fit.
+      const side = Math.floor(Math.max(180, Math.min(w, (h - 12 - 52) / (1 + 1.3 / n), 520)));
       area.style.width = side + 'px';
       grid.style.height = side + 'px';
       area.style.setProperty('--cell', side / n + 'px');

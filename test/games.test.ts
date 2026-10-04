@@ -278,6 +278,35 @@ describe('sudoku', () => {
     expect(geo.box(2 * 6 + 0)).not.toBe(geo.box(0));
   });
 
+  it('hints point at a wrong digit first, then at forced cells, and always agree with the solution', () => {
+    const { puzzle, solution } = sd.generate(3);
+    const g = puzzle.slice();
+    const empty = g.indexOf(0);
+    g[empty] = (solution[empty] % 9) + 1; // a wrong digit
+    expect(sd.findHint(g, solution)).toEqual({ kind: 'wrong', cell: empty });
+    g[empty] = 0;
+    // Following hints to the end must solve the board without contradicting the solution.
+    for (let step = 0; step < 81; step++) {
+      const h = sd.findHint(g, solution);
+      if (!h) break;
+      expect(h.kind).not.toBe('wrong');
+      if (h.kind !== 'wrong') {
+        expect(h.digit).toBe(solution[h.cell]);
+        g[h.cell] = h.digit;
+      }
+    }
+    expect(g).toEqual(solution);
+  });
+
+  it('lists candidates as the digits missing among peers', () => {
+    const g = new Array(81).fill(0);
+    g[1] = 5; g[9] = 7; g[40] = 9; // same row, same column/box, unrelated
+    const mask = sd.candidates(g, 0);
+    expect(mask & (1 << 5)).toBe(0);
+    expect(mask & (1 << 7)).toBe(0);
+    expect(mask & (1 << 9)).not.toBe(0);
+  });
+
   it('salt 0 keeps the regular sequence and other salts differ', () => {
     expect(sd.generate(7, sd.SPEC9, 0).puzzle).toEqual(sd.generate(7).puzzle);
     expect(sd.generate(7, sd.SPEC9, 20000).puzzle).not.toEqual(sd.generate(7).puzzle);
