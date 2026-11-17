@@ -101,7 +101,7 @@ All files in `store/graphics/` (sources in `store/graphics/src/`, rendered with 
 - Privacy policy: URL above
 - Ads: **No, the app does not contain ads**
 - App access: **All functionality is available without special access**
-- Content rating (IARC questionnaire): category "Puzzle / Game"; answer **No** to violence, sexuality, language, controlled substances, gambling, user interaction/communication, sharing location, digital purchases. Expected result: PEGI 3 / Everyone.
+- Content rating (IARC questionnaire): category "Puzzle / Game"; answer **No** to violence, sexuality, language, controlled substances, gambling, user interaction/communication, sharing location; answer **Yes** to digital purchases (one-time unlock). Expected result: PEGI 3 / Everyone.
 - Target audience: **13+** (e.g. 13-15, 16-17, 18+). Choosing under-13 age groups puts the app under the Families policy and extra review; possible later, not needed now.
 - News app: No
 - Government app: No
@@ -119,13 +119,13 @@ All files in `store/graphics/` (sources in `store/graphics/src/`, rendered with 
 - Output: `android/app/build/outputs/bundle/release/app-release.aab`
 - Play App Signing: upload `app-release.aab`; the keystore from `keystore.properties` becomes the **upload key**. Back it up in two places.
 - Release notes (PL, max 500): `Pierwsze wydanie w Google Play: 11 łamigłówek, codzienna plansza i statystyki.`
-- Current bundle: versionCode 10, versionName 1.4.1, built 2026-11-17. Every later upload needs a higher versionCode.
+- Current bundle: versionCode 11, versionName 1.5.0 (with billing), built 2026-11-17. Every later upload needs a higher versionCode.
 
 ## Play Console steps (owner only)
 
 1. Developer account: an **organization** account (D-U-N-S above) skips the closed-test rule; a **personal**
    account created after Nov 2023 must run a closed test with 12+ testers for 14 days before production.
-2. Create app: name, default language pl-PL, Game, Free.
+2. Create app: name, default language pl-PL, Game, Free (the unlock is an in-app product, the app itself stays free).
 3. Fill App content from the section above (privacy URL, ads: no, data safety: nothing collected, IARC, audience 13+).
 4. Store listing: texts above, graphics from `store/graphics/`.
 5. App signing: default (Google-generated app signing key), decided 2026-11-17. The self-hosted APK has
