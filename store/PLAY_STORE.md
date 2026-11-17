@@ -24,6 +24,8 @@ EN: `11 offline logic puzzles: Sudoku, Queens, no-guess Minesweeper and more`
 ```
 Jedenaście łamigłówek logicznych w jednej aplikacji. Bez reklam, bez kont, bez internetu.
 
+Pierwsze 10 poziomów każdej gry i codzienna łamigłówka są za darmo. Pełną wersję odblokowujesz jednym zakupem, bez subskrypcji.
+
 W zestawie:
 • Sortuj kulki: ułóż kolory w probówkach
 • Sudoku 9x9 i Sudoku 6x6 na szybką partię
@@ -50,6 +52,8 @@ Prywatność: aplikacja nie zbiera żadnych danych i działa w pełni offline. P
 ```
 Eleven logic puzzles in one app. No ads, no accounts, no internet needed.
 
+The first 10 levels of every game and the daily puzzle are free. Unlock the full version with a single purchase, no subscription.
+
 Included:
 • Ball Sort: sort the colors into tubes
 • Sudoku 9x9, plus Sudoku 6x6 for a quick game
@@ -70,6 +74,16 @@ Stats: solve times, best times per board size and your recent average.
 
 Privacy: the app collects no data and works fully offline. Your progress stays on your phone.
 ```
+
+## In-app product
+
+- Type: one-time product (Monetize > Products > One-time products)
+- Product ID: `unlock_all` (must match `PRODUCT_ID` in `src/premium.ts`; permanent)
+- Name: `Pełna wersja` / `Full version`
+- Description: `Wszystkie poziomy we wszystkich grach` / `Every level in every game`
+- Price: 9.99 PLN (Google converts for other countries)
+- The app restores it on every start (new phone, reinstall) and drops it after a refund.
+- Products can be created only after an AAB with the billing permission is uploaded to any track.
 
 ## Graphics checklist
 

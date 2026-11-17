@@ -4,6 +4,8 @@ import { haptic } from './haptics';
 import { loadJSON, loadLevel, saveJSON, saveLevel } from './storage';
 import { formatTime, recordSolve } from './stats';
 import type { GameContext } from './types';
+import { isLocked } from './premium';
+import { showPaywall } from './paywall';
 
 const svg = (body: string, width = 2.4) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -284,6 +286,13 @@ export const squareSize = (n: number): string => `${n}×${n}`;
 
 export function levelFlow(id: string, ctx: GameContext): LevelFlow {
   const daily = ctx.daily;
+  /** Next level, or the full-version card first once the free levels are done. */
+  const advance = (screen: Screen, level: number, next: (level: number) => void) => {
+    if (!isLocked(level)) return next(level);
+    screen.setWinCloser(
+      showPaywall({ onUnlocked: () => { screen.setWinCloser(null); next(level); }, onClose: ctx.back }),
+    );
+  };
   let size = '';
   return {
     setSize(label) { size = label; },
@@ -304,7 +313,7 @@ export function levelFlow(id: string, ctx: GameContext): LevelFlow {
       else saveLevel(id, level + 1);
       setTimeout(() => {
         if (daily) showWin(screen, { text: `Zagadka dnia rozwiązana. ${time}`, button: 'Wróć', onNext: ctx.back });
-        else showWin(screen, { text: `${text}. ${time}`, onNext: () => next(level + 1) });
+        else showWin(screen, { text: `${text}. ${time}`, onNext: () => advance(screen, level + 1, next) });
       }, delayMs);
     },
   };

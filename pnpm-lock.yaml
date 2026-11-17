@@ -26,6 +26,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^8.0.3
         version: 8.0.3(@capacitor/core@8.5.2)
+      '@capgo/native-purchases':
+        specifier: ^8.9.16
+        version: 8.9.16(@capacitor/core@8.5.2)
       '@fontsource/baloo-2':
         specifier: ^5.3.0
         version: 5.3.0
@@ -91,6 +94,11 @@ packages:
 
   '@capacitor/status-bar@8.0.3':
     resolution: {integrity: sha512-csSpfNeN49Hx9JaQBSJEIiEbOLtXg3kcc2IpScq2fu5L520h3AWEvsxoH8Srk1jxfRKepaJ4S4sqSC3foI4AgA==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capgo/native-purchases@8.9.16':
+    resolution: {integrity: sha512-NrW4+ll1+0y9nPYgdHdKZ1/kUtmzdW/GCNlc87DGzi0+0r2dRbd51cBf/UicT5nb0C/13+1G7K3+tXVRaSc+6Q==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -1508,6 +1516,10 @@ snapshots:
       '@capacitor/core': 8.5.2
 
   '@capacitor/status-bar@8.0.3(@capacitor/core@8.5.2)':
+    dependencies:
+      '@capacitor/core': 8.5.2
+
+  '@capgo/native-purchases@8.9.16(@capacitor/core@8.5.2)':
     dependencies:
       '@capacitor/core': 8.5.2
 

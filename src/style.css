@@ -819,3 +819,21 @@ header:has([data-info]) { gap: 8px; }
   .ball, .tube, .lo-cell, .p15-tile, .bn-cell span { transition: none; }
   .tube.nope, .tube.closing, .tube.closing .cork, .overlay.show .card { animation: none; }
 }
+
+/* Paywall: one-time unlock card. */
+.paywall .rules { text-align: left; margin: 0 0 16px; }
+.paywall .paywall-text { margin-bottom: 12px; }
+.paywall .paywall-status { margin: 0 0 12px; color: var(--text); font-size: 0.95rem; }
+.paywall .paywall-status:empty { display: none; }
+.paywall .primary { display: block; margin: 0 auto; }
+.paywall-more { display: flex; justify-content: center; gap: 16px; margin-top: 12px; }
+.text-btn {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+.text-btn:disabled { opacity: 0.5; }

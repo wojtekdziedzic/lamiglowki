@@ -11,6 +11,9 @@ import { renderMenu } from './menu';
 import { markSolved, renderDaily, today } from './daily';
 import { renderStats } from './stats-screen';
 import { initNative } from './native';
+import { loadLevel } from './storage';
+import { isLocked, refreshPremium } from './premium';
+import { showPaywall } from './paywall';
 import { ballsort } from './games/ballsort';
 import { lightsout } from './games/lightsout';
 import { fifteen } from './games/fifteen';
@@ -54,7 +57,19 @@ function route(): void {
     return;
   }
   const game = GAMES.find((g) => g.id === head);
-  cleanup = game ? game.mount(root, { back: () => go('') }) : renderMenu(root, GAMES, go);
+  if (!game) {
+    cleanup = renderMenu(root, GAMES, go);
+    return;
+  }
+  const unmount = game.mount(root, { back: () => go('') });
+  // Saved progress past the free levels: offer the full version before playing on.
+  const closePaywall = isLocked(loadLevel(game.id))
+    ? showPaywall({ onUnlocked: () => {}, onClose: () => go('') })
+    : null;
+  cleanup = () => {
+    closePaywall?.();
+    unmount();
+  };
 }
 
 window.addEventListener('hashchange', route);
@@ -70,3 +85,4 @@ initNative({
 });
 
 route();
+void refreshPremium();

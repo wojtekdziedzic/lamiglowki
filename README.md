@@ -4,6 +4,9 @@ Eleven logic puzzles in one Android app: ball sort, Sudoku (9x9 and 6x6), Queens
 (Tango-style), Skyscrapers, Tents, no-guess Minesweeper, Binairo ("Dwa kolory"), Lights Out and the
 15-puzzle, plus a daily puzzle that is the same for everyone. No ads, no accounts, works offline.
 
+The first 10 levels of each game and the daily puzzle are free; a one-time Google Play purchase
+(`unlock_all`, see `src/premium.ts`) unlocks the rest.
+
 Download: https://dziedzic.cloud/lamiglowki
 
 ## How levels work
