@@ -11,7 +11,7 @@ Ready-to-paste texts and form answers for Play Console. Keep in sync with the ap
 - Tags: Logic, Sudoku, Brain games, Offline
 - Contact email: wojciech@dziedzic.cloud
 - Website: https://dziedzic.cloud/lamiglowki
-- Privacy policy URL: https://dziedzic.cloud/lamiglowki/prywatnosc (see `privacy-policy.html`)
+- Privacy policy URL: https://dziedzic.cloud/lamiglowki-prywatnosc (live copy in the dziedzic.cloud repo, `lamiglowki-prywatnosc.html`; `/lamiglowki/prywatnosc` loops in the site's rewrite rules and returns 500)
 
 ## Short description (max 80)
 
@@ -87,9 +87,13 @@ Privacy: the app collects no data and works fully offline. Your progress stays o
 
 ## Graphics checklist
 
-- [ ] App icon 512x512 PNG (32-bit, no transparency needed), max 1 MB
-- [ ] Feature graphic 1024x500 PNG/JPG, no text near edges
-- [ ] Phone screenshots: 4-8, 9:16, min 1080px on the short side (menu, 3-4 games, daily, stats)
+All files in `store/graphics/` (sources in `store/graphics/src/`, rendered with headless Edge).
+
+- [x] App icon 512x512: `icon-512.png` (full-bleed square, Play applies the mask)
+- [x] Feature graphic 1024x500: `feature-1024x500.png`
+- [x] Phone screenshots 1080x1920 (9:16), 8 files `01-menu.png` to `08-binairo.png`, upload in name order.
+  Rendered from `dist/index.html` at 540x960 @2x with a helper page that marks rules as seen and sets
+  mid-game levels in localStorage. Real phone screenshots may replace them later (must stay 9:16, not 9:20).
 - [ ] Optional: 7" and 10" tablet screenshots (app is portrait-only)
 
 ## App content (Policy > App content)
@@ -115,3 +119,16 @@ Privacy: the app collects no data and works fully offline. Your progress stays o
 - Output: `android/app/build/outputs/bundle/release/app-release.aab`
 - Play App Signing: upload `app-release.aab`; the keystore from `keystore.properties` becomes the **upload key**. Back it up in two places.
 - Release notes (PL, max 500): `Pierwsze wydanie w Google Play: 11 łamigłówek, codzienna plansza i statystyki.`
+- Current bundle: versionCode 10, versionName 1.4.1, built 2026-11-17. Every later upload needs a higher versionCode.
+
+## Play Console steps (owner only)
+
+1. Developer account: an **organization** account (D-U-N-S above) skips the closed-test rule; a **personal**
+   account created after Nov 2023 must run a closed test with 12+ testers for 14 days before production.
+2. Create app: name, default language pl-PL, Game, Free.
+3. Fill App content from the section above (privacy URL, ads: no, data safety: nothing collected, IARC, audience 13+).
+4. Store listing: texts above, graphics from `store/graphics/`.
+5. App signing: default (Google-generated app signing key), decided 2026-11-17. The self-hosted APK has
+   practically no users, so a signature mismatch with Play builds is acceptable (an APK user would have to
+   uninstall first and lose progress). `lamiglowki.jks` becomes the upload key.
+6. Release: upload `app-release.aab`, internal test first (install from Play on your own phone), then production.
